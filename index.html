@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OJT Hunter — Internship Pipeline Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">🎯</div>
+    <h1>OJT Hunter</h1>
+    <p class="auth-sub">Your internship pipeline, organized.</p>
+    <div class="auth-tabs">
+      <button id="tab-signin" class="auth-tab active" type="button">Sign in</button>
+      <button id="tab-signup" class="auth-tab" type="button">Sign up</button>
+    </div>
+    <form id="auth-form" autocomplete="on">
+      <label class="field">
+        <span>Email</span>
+        <input id="auth-email" type="email" required placeholder="you@example.com">
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input id="auth-password" type="password" required minlength="6" placeholder="••••••••">
+      </label>
+      <p id="auth-hint" class="auth-hint hidden"></p>
+      <button id="auth-submit" class="btn primary wide" type="submit">Sign in</button>
+    </form>
+    <p id="setup-warning" class="setup-warning hidden"></p>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+  <header class="topbar">
+    <div class="brand"><span class="brand-icon">🎯</span><span>OJT<b>Hunter</b></span></div>
+    <nav class="tabs">
+      <button class="tab active" data-view="board" type="button">Board</button>
+      <button class="tab" data-view="vault" type="button">Vault</button>
+      <button class="tab" data-view="deadlines" type="button">
+        Deadlines<span id="deadline-badge" class="badge hidden"></span>
+      </button>
+    </nav>
+    <div class="account">
+      <span id="user-email" class="user-email"></span>
+      <button id="btn-signout" class="btn ghost sm" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <section id="view-board" class="view active">
+      <div class="toolbar">
+        <input id="board-search" class="input search" type="search" placeholder="Search company or position…">
+        <div id="board-stats" class="stats"></div>
+        <button id="btn-add-app" class="btn primary" type="button">+ Application</button>
+      </div>
+      <div id="kanban" class="kanban"></div>
+      <div id="board-empty" class="empty hidden">
+        <p>No applications yet.</p>
+        <button class="btn primary" onclick="document.getElementById('btn-add-app').click()" type="button">Add your first target</button>
+      </div>
+    </section>
+
+    <section id="view-vault" class="view">
+      <div class="toolbar">
+        <div id="doc-filters" class="chips">
+          <button class="chip active" data-filter="all" type="button">All</button>
+          <button class="chip" data-filter="resume" type="button">Resume</button>
+          <button class="chip" data-filter="tor" type="button">TOR</button>
+          <button class="chip" data-filter="good_moral" type="button">Good Moral</button>
+          <button class="chip" data-filter="nda" type="button">NDA</button>
+          <button class="chip" data-filter="medical" type="button">Medical</button>
+          <button class="chip" data-filter="other" type="button">Other</button>
+        </div>
+        <button id="btn-add-doc" class="btn primary" type="button">+ Document link</button>
+      </div>
+      <div id="doc-grid" class="doc-grid"></div>
+      <div id="doc-empty" class="empty hidden">
+        <p>Vault is empty. Paste links to your Resume, TOR, Good Moral — grab them in one click when HR asks.</p>
+        <button class="btn primary" onclick="document.getElementById('btn-add-doc').click()" type="button">Add a document</button>
+      </div>
+    </section>
+
+    <section id="view-deadlines" class="view">
+      <div id="deadlines-wrap" class="deadlines-wrap"></div>
+      <div id="deadlines-empty" class="empty hidden">
+        <p>Nothing due. Set deadlines on your applications to see reminders here.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<dialog id="modal-application" class="modal">
+  <form id="form-application" method="dialog">
+    <h2 id="app-modal-title">New application</h2>
+    <div class="grid-2">
+      <label class="field"><span>Company *</span><input id="f-company" required placeholder="e.g. Accenture"></label>
+      <label class="field"><span>Position *</span><input id="f-position" required placeholder="e.g. OJT — Web Dev"></label>
+      <label class="field"><span>HR email</span><input id="f-email" type="email" placeholder="hr@company.com"></label>
+      <label class="field"><span>Job post URL</span><input id="f-url" type="url" placeholder="https://…"></label>
+      <label class="field"><span>Status</span>
+        <select id="f-status">
+          <option value="to_apply">To Apply</option>
+          <option value="applied">Applied</option>
+          <option value="interview">Interview</option>
+          <option value="offer">Offer</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </label>
+      <label class="field"><span>Priority</span>
+        <select id="f-priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </label>
+      <label class="field"><span>Application deadline</span><input id="f-deadline" type="date"></label>
+      <label class="field"><span>Follow-up reminder</span><input id="f-followup" type="datetime-local"></label>
+      <label class="field"><span>OJT hours offered</span><input id="f-hours" type="number" min="0" step="1" placeholder="486"></label>
+    </div>
+    <div class="notes-panel">
+      <h3>Company notes &amp; interview questions</h3>
+      <div id="notes-list" class="notes-list"></div>
+      <div class="note-add">
+        <textarea id="note-input" rows="2" placeholder="Paste interview questions, culture notes, salary info… (Ctrl+Enter to save)"></textarea>
+        <button id="btn-add-note" class="btn sm" type="button">Add note</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button id="btn-delete-app" class="btn danger ghost" type="button">Delete</button>
+      <span class="spacer"></span>
+      <button class="btn ghost cancel-btn" type="button">Cancel</button>
+      <button class="btn primary" type="submit">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="modal-document" class="modal narrow">
+  <form id="form-document" method="dialog">
+    <h2 id="doc-modal-title">Add document link</h2>
+    <label class="field"><span>Name *</span><input id="d-name" required placeholder="Resume v3 — software track"></label>
+    <div class="grid-2">
+      <label class="field"><span>Type</span>
+        <select id="d-type">
+          <option value="resume">Resume</option>
+          <option value="tor">Transcript of Records</option>
+          <option value="good_moral">Good Moral</option>
+          <option value="nda">NDA</option>
+          <option value="medical">Medical cert</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label class="field"><span>Version / label</span><input id="d-version" placeholder="v2, 2026, …"></label>
+    </div>
+    <label class="field"><span>Link *</span><input id="d-link" type="url" required placeholder="https://drive.google.com/…"></label>
+    <label class="field"><span>Notes</span><textarea id="d-notes" rows="2" placeholder="Shared setting: anyone with the link can view"></textarea></label>
+    <div class="modal-actions">
+      <button id="btn-delete-doc" class="btn danger ghost" type="button">Delete</button>
+      <span class="spacer"></span>
+      <button class="btn ghost cancel-btn" type="button">Cancel</button>
+      <button class="btn primary" type="submit">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts" class="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/vault.js"></script>
+<script src="js/reminders.js"></script>
+<script src="js/kanban.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
