@@ -40,6 +40,9 @@ const app = {
       await sb().auth.signOut();
     };
 
+    document.getElementById('empty-add-app').onclick = () => kanban.openModal(null);
+    document.getElementById('empty-add-doc').onclick = () => vault.openModal(null);
+
     document.querySelectorAll('.modal .cancel-btn').forEach(btn => {
       btn.onclick = () => closeAllModals();
     });
@@ -47,12 +50,21 @@ const app = {
       if (e.key === 'Escape') closeAllModals();
     });
 
+    window.addEventListener('unhandledrejection', e => {
+      toast(e.reason?.message || 'Unexpected error', 'err');
+    });
+    window.addEventListener('error', e => {
+      if (e.message) toast('Error: ' + e.message, 'err');
+    });
+    window.addEventListener('offline', () => toast('You are offline — changes will fail until reconnect', 'err'));
+    window.addEventListener('online', () => toast('Back online', 'ok'));
+
     if (!isConfigured()) {
       const warn = document.getElementById('setup-warning');
       warn.innerHTML =
         'Not connected yet.<br>1) Create a free project at <b>supabase.com</b><br>' +
         '2) Run <b>sql/schema.sql</b> in the SQL Editor<br>' +
-        '3) Paste your URL + anon key into <b>js/supabase.js</b>';
+        '3) Paste your URL + anon key into <b>js/config.js</b>';
       warn.classList.remove('hidden');
       document.getElementById('auth-form').querySelectorAll('input,button')
         .forEach(el => el.disabled = true);

@@ -29,6 +29,7 @@ const vault = {
 
     for (const d of list) {
       const meta = vault.DOC_META[d.type] || vault.DOC_META.other;
+      const safeLink = sanitizeUrl(d.link);
       const card = document.createElement('div');
       card.className = 'doc-card';
       card.innerHTML = `
@@ -37,11 +38,11 @@ const vault = {
           <span class="doc-name"></span>
           <span class="doc-type-tag dt-${d.type}">${meta.label}</span>
         </div>
-        ${d.version ? `<span class="doc-version">${d.version}</span>` : ''}
-        ${d.notes ? `<span class="doc-notes">${d.notes}</span>` : ''}
+        ${d.version ? '<span class="doc-version"></span>' : ''}
+        ${d.notes ? '<span class="doc-notes"></span>' : ''}
         <div class="doc-actions">
           <button class="btn sm primary act-copy" type="button">Copy link</button>
-          <a class="btn sm" href="${d.link}" target="_blank" rel="noopener">Open</a>
+          ${safeLink ? '<a class="btn sm" target="_blank" rel="noopener noreferrer">Open</a>' : '<span class="pill overdue">invalid link</span>'}
           <button class="btn sm ghost act-edit" type="button">Edit</button>
         </div>`;
       card.querySelector('.doc-name').textContent = d.name;
@@ -53,6 +54,10 @@ const vault = {
           .then(() => toast('Link copied — paste it into your email!', 'ok'))
           .catch(() => toast('Copy failed', 'err'));
       };
+      if (safeLink) {
+        const open = card.querySelector('.doc-actions a');
+        open.href = safeLink;
+      }
       card.querySelector('.act-edit').onclick = () => vault.openModal(d);
 
       grid.appendChild(card);
@@ -87,11 +92,13 @@ const vault = {
 
     document.getElementById('form-document').onsubmit = async e => {
       e.preventDefault();
+      const safeLink = sanitizeUrl(val('d-link'));
+      if (!safeLink) { toast('Link must start with https:// or http://', 'err'); return; }
       const fields = {
         name: val('d-name'),
         type: val('d-type'),
         version: val('d-version') || null,
-        link: val('d-link'),
+        link: safeLink,
         notes: val('d-notes') || null
       };
       try {

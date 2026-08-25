@@ -14,6 +14,14 @@ const STATUS_COLORS = {
   rejected: '#ef5350'
 };
 
+function sanitizeUrl(raw) {
+  if (!raw) return null;
+  try {
+    const u = new URL(raw);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : null;
+  } catch (e) { return null; }
+}
+
 async function fetchApplications() {
   const { data, error } = await sb().from('applications')
     .select('*')

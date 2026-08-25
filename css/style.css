@@ -392,6 +392,11 @@ textarea { resize: vertical; }
 .dl-company { font-weight: 700; font-size: .92rem; }
 .dl-sub { color: var(--text-dim); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dl-status { font-size: .74rem; font-weight: 700; border-radius: 5px; padding: .18rem .5rem; }
+.st-to_apply  { background: var(--bg-hover);    color: var(--text-dim); }
+.st-applied   { background: var(--accent-soft); color: var(--accent); }
+.st-interview { background: var(--yellow-soft); color: var(--yellow); }
+.st-offer     { background: var(--green-soft);  color: #7ddba3; }
+.st-rejected  { background: var(--red-soft);    color: #ff8a88; }
 
 .modal {
   border: 1px solid var(--border-strong);

@@ -26,14 +26,23 @@ python -m http.server 8081
 ### 2. Connect Supabase (one-time)
 
 1. Create a free project at [supabase.com](https://supabase.com)
-2. Open **SQL Editor** in the dashboard, paste the contents of [`sql/schema.sql`](sql/schema.sql), and run it. This creates the tables + Row Level Security so every user only ever touches their own data.
-3. Copy your project URL and **anon key** from Project Settings → API, then paste them into `js/supabase.js`
+2. Open **SQL Editor** in the dashboard, paste the contents of [`sql/schema.sql`](sql/schema.sql), and run it. This creates the tables + Row Level Security so every user only ever touches their own data. Safe to re-run.
+3. Copy your project URL and **anon key** from Project Settings → API, then paste them into `js/config.js`
 
 The anon key is public by design — protection comes entirely from RLS policies.
 
 ### 3. Sign up & hunt
 
-Sign up with any email/password, add your first target company, and start dragging cards.
+Sign up with any email/password (8+ chars), add your first target company, and start dragging cards.
+
+## Security model
+
+- **Row Level Security** — every table locks each row to `auth.uid()`; the server rejects any cross-user read/write, so the public anon key can't leak anyone's data
+- **Content Security Policy** — injected from your own config at startup: `default-src 'none'`, scripts only from itself + jsDelivr, network requests only to your Supabase project. Any injected script, remote frame, or unexpected request is blocked by the browser
+- **Pinned dependencies** — supabase-js is pinned to an exact version with a Subresource Integrity hash, so a compromised or mutated CDN file cannot execute
+- **XSS-safe rendering** — user content (names, notes, versions) is inserted via `textContent`, never raw HTML; links are scheme-allowlisted to http(s) so `javascript:` URLs are rejected at both the form and the render layer
+- **DB-level limits** — length/range constraints on every text and numeric column, enforced by Postgres even if the client is bypassed
+- **No referrer leakage** — `referrer: no-referrer` meta plus `rel="noopener noreferrer"` on outbound links
 
 ## Data model
 

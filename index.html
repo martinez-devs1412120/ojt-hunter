@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
 <title>OJT Hunter — Internship Pipeline Dashboard</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
 <link rel="stylesheet" href="css/style.css">
@@ -21,11 +22,11 @@
     <form id="auth-form" autocomplete="on">
       <label class="field">
         <span>Email</span>
-        <input id="auth-email" type="email" required placeholder="you@example.com">
+        <input id="auth-email" type="email" required autocomplete="email" placeholder="you@example.com">
       </label>
       <label class="field">
         <span>Password</span>
-        <input id="auth-password" type="password" required minlength="6" placeholder="••••••••">
+        <input id="auth-password" type="password" required minlength="8" autocomplete="current-password" placeholder="••••••••">
       </label>
       <p id="auth-hint" class="auth-hint hidden"></p>
       <button id="auth-submit" class="btn primary wide" type="submit">Sign in</button>
@@ -61,7 +62,7 @@
       <div id="kanban" class="kanban"></div>
       <div id="board-empty" class="empty hidden">
         <p>No applications yet.</p>
-        <button class="btn primary" onclick="document.getElementById('btn-add-app').click()" type="button">Add your first target</button>
+        <button id="empty-add-app" class="btn primary" type="button">Add your first target</button>
       </div>
     </section>
 
@@ -81,7 +82,7 @@
       <div id="doc-grid" class="doc-grid"></div>
       <div id="doc-empty" class="empty hidden">
         <p>Vault is empty. Paste links to your Resume, TOR, Good Moral — grab them in one click when HR asks.</p>
-        <button class="btn primary" onclick="document.getElementById('btn-add-doc').click()" type="button">Add a document</button>
+        <button id="empty-add-doc" class="btn primary" type="button">Add a document</button>
       </div>
     </section>
 
@@ -170,7 +171,9 @@
 
 <div id="toasts" class="toasts"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/csp.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js" integrity="sha384-ysv13JVP3fufiEXfjML9OdCa/rRbMJvUBOWyor82wfuK8INNZAvmbxHgKIHi+oqz" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="js/supabase.js"></script>
 <script src="js/db.js"></script>
 <script src="js/auth.js"></script>

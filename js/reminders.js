@@ -86,7 +86,7 @@ const reminders = {
         <span class="dl-company"></span>
         <span class="dl-sub">${label} · ${STATUS_LABELS[app.status]}</span>
       </span>
-      <span class="dl-status" style="background:${app.status === 'interview' ? 'var(--yellow-soft)' : 'var(--accent-soft)'};color:${app.status === 'interview' ? 'var(--yellow)' : 'var(--accent)'}">${STATUS_LABELS[app.status]}</span>`;
+      <span class="dl-status st-${app.status}">${STATUS_LABELS[app.status]}</span>`;
     el.querySelector('.dl-company').textContent = `${app.company} — ${app.position}`;
     el.onclick = () => kanban.openModal(app);
     return { el };

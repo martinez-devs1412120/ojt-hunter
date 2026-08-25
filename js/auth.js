@@ -36,10 +36,12 @@ const auth = {
       if (auth.mode === 'signup') {
         const { error } = await sb().auth.signUp({ email, password });
         if (error) throw error;
+        document.getElementById('auth-password').value = '';
         auth.hint('Account created! If email confirmation is enabled, check your inbox, then sign in.', true);
       } else {
         const { error } = await sb().auth.signInWithPassword({ email, password });
         if (error) throw error;
+        document.getElementById('auth-password').value = '';
       }
     } catch (err) {
       auth.hint(err.message, false);

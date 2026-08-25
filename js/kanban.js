@@ -170,11 +170,13 @@ const kanban = {
 
     document.getElementById('form-application').onsubmit = async e => {
       e.preventDefault();
+      const jobUrl = sanitizeUrl(val('f-url'));
+      if (val('f-url') && !jobUrl) { toast('Job post URL must start with https:// or http://', 'err'); return; }
       const fields = {
         company: val('f-company'),
         position: val('f-position') || 'OJT Intern',
         hr_email: val('f-email') || null,
-        source_url: val('f-url') || null,
+        source_url: jobUrl,
         status: val('f-status'),
         priority: val('f-priority'),
         deadline: val('f-deadline') || null,
