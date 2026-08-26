@@ -5,12 +5,35 @@ const app = {
     if (!isConfigured()) return;
     app.currentUser = user.id;
     document.getElementById('user-email').textContent = user.email;
+    document.getElementById('avatar').textContent =
+      (user.email[0] || '?').toUpperCase();
+    document.getElementById('greeting').textContent =
+      `Welcome back, ${displayName(user.email)}!`;
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
     try {
       await Promise.all([kanban.load(), vault.load()]);
       reminders.notifyDaily(kanban.apps);
     } catch (err) { toast(err.message, 'err'); }
+  },
+
+  renderStats(apps) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    let active = 0, interviewing = 0, offers = 0, overdue = 0;
+    for (const a of apps) {
+      if (a.status !== 'rejected') active++;
+      if (a.status === 'interview') interviewing++;
+      if (a.status === 'offer') offers++;
+      if (a.deadline && !['offer', 'rejected'].includes(a.status)) {
+        const due = new Date(a.deadline + 'T00:00:00');
+        if (due < today) overdue++;
+      }
+    }
+    setNum('stat-total', apps.length);
+    setNum('stat-active', active);
+    setNum('stat-interview', interviewing);
+    setNum('stat-offer', offers);
+    setNum('stat-overdue', overdue);
   },
 
   leave() {
@@ -27,9 +50,9 @@ const app = {
     vault.init();
     reminders.init();
 
-    document.querySelectorAll('.tab').forEach(tab => {
+    document.querySelectorAll('.nav-item[data-view]').forEach(tab => {
       tab.onclick = () => {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-item[data-view]').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById('view-' + tab.dataset.view).classList.add('active');
@@ -81,6 +104,15 @@ function toast(msg, kind = '') {
   el.textContent = msg;
   document.getElementById('toasts').appendChild(el);
   setTimeout(() => el.remove(), 3200);
+}
+
+function setNum(id, n) {
+  document.getElementById(id).textContent = n;
+}
+
+function displayName(email) {
+  const raw = (email.split('@')[0].match(/[A-Za-z]+/) || ['hunter'])[0];
+  return (raw.charAt(0).toUpperCase() + raw.slice(1)).slice(0, 14);
 }
 
 function closeAllModals() {

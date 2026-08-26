@@ -5,8 +5,13 @@ const kanban = {
 
   async load() {
     kanban.apps = await fetchApplications();
+    kanban.sync();
+  },
+
+  sync() {
     kanban.render();
     reminders.render(kanban.apps);
+    app.renderStats(kanban.apps);
   },
 
   visible() {
@@ -63,8 +68,7 @@ const kanban = {
           if (status === 'applied' && !app.applied_at) fields.applied_at = new Date().toISOString();
           const updated = await updateApplication(id, fields);
           Object.assign(app, updated);
-          kanban.render();
-          reminders.render(kanban.apps);
+          kanban.sync();
           toast(`"${app.company}" moved ${prevStatus} → ${newStatus}`, 'ok');
         } catch (err) { toast(err.message, 'err'); }
       });
@@ -196,8 +200,7 @@ const kanban = {
         else kanban.apps.push(saved);
 
         closeAllModals();
-        kanban.render();
-        reminders.render(kanban.apps);
+        kanban.sync();
         toast(kanban.editingId ? 'Application updated' : `"${saved.company}" added`, 'ok');
       } catch (err) { toast(err.message, 'err'); }
     };

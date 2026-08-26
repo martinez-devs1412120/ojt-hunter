@@ -35,6 +35,8 @@ const reminders = {
     const badge = document.getElementById('deadline-badge');
     badge.classList.toggle('hidden', alerts.length === 0);
     badge.textContent = alerts.length;
+    setNum('dl-count', alerts.length);
+    reminders.chart(apps);
 
     const wrap = document.getElementById('deadlines-wrap');
     const groups = {
@@ -68,6 +70,39 @@ const reminders = {
     }
     document.getElementById('deadlines-empty').classList.toggle('hidden', any);
     wrap.classList.toggle('hidden', !any);
+  },
+
+  chart(apps) {
+    const holder = document.getElementById('dl-chart');
+    if (!holder) return;
+    holder.innerHTML = '';
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const days = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today); d.setDate(d.getDate() + i);
+      days.push(d);
+    }
+    const counts = days.map(d => {
+      const iso = d.toISOString().slice(0, 10);
+      return apps.filter(a => a.deadline === iso).length;
+    });
+    const max = Math.max(1, ...counts);
+    const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    days.forEach((d, i) => {
+      const col = document.createElement('div');
+      col.className = 'dl-bar-col';
+      const bar = document.createElement('span');
+      bar.className = 'dl-bar' + (counts[i] > 0 ? ' has' : '') + (i === 0 ? ' today' : '');
+      bar.style.height = (10 + (counts[i] / max) * 70) + 'px';
+      const label = document.createElement('span');
+      label.className = 'dl-day';
+      label.textContent = letters[d.getDay()];
+      col.title = d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) +
+        (counts[i] ? ` — ${counts[i]} due` : ' — nothing due');
+      col.appendChild(bar);
+      col.appendChild(label);
+      holder.appendChild(col);
+    });
   },
 
   row(app, state, kind) {

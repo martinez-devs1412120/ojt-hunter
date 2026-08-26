@@ -12,6 +12,8 @@ const vault = {
     other:      { label: 'Other',     icon: '📁' }
   },
 
+  REQUIRED: ['resume', 'tor', 'good_moral', 'nda', 'medical'],
+
   async load() {
     vault.docs = await fetchDocuments();
     vault.render();
@@ -23,6 +25,8 @@ const vault = {
       ? vault.docs
       : vault.docs.filter(d => d.type === vault.filter);
 
+    setNum('vault-count', vault.docs.length);
+    vault.renderCoverage();
     grid.innerHTML = '';
     document.getElementById('doc-empty').classList.toggle('hidden', list.length > 0);
     grid.classList.toggle('hidden', list.length === 0);
@@ -64,14 +68,37 @@ const vault = {
     }
   },
 
-  openModal(doc) {
+  renderCoverage() {
+    const holder = document.getElementById('doc-coverage');
+    if (!holder) return;
+    holder.innerHTML = '';
+    for (const type of vault.REQUIRED) {
+      const meta = vault.DOC_META[type];
+      const have = vault.docs.some(d => d.type === type && sanitizeUrl(d.link));
+      const row = document.createElement('div');
+      row.className = 'cov-row ' + (have ? 'have' : 'miss');
+      row.innerHTML = `
+        <span class="cov-label">${meta.label}</span>
+        <span class="cov-track"><span class="cov-fill"></span></span>
+        <span class="cov-state"></span>`;
+      row.querySelector('.cov-fill').style.width = have ? '100%' : '8%';
+      row.querySelector('.cov-state').textContent = have ? 'Ready' : 'Missing';
+      row.title = have
+        ? `${meta.label} is in your vault — click to add another version`
+        : `No ${meta.label} yet — click to add it`;
+      row.onclick = () => vault.openModal(null, type);
+      holder.appendChild(row);
+    }
+  },
+
+  openModal(doc, presetType) {
     const m = document.getElementById('modal-document');
     vault.editingId = doc?.id || null;
     document.getElementById('doc-modal-title').textContent =
       doc ? 'Edit document' : 'Add document link';
     document.getElementById('btn-delete-doc').classList.toggle('hidden', !doc);
     document.getElementById('d-name').value = doc?.name || '';
-    document.getElementById('d-type').value = doc?.type || 'resume';
+    document.getElementById('d-type').value = doc?.type || presetType || 'resume';
     document.getElementById('d-version').value = doc?.version || '';
     document.getElementById('d-link').value = doc?.link || '';
     document.getElementById('d-notes').value = doc?.notes || '';

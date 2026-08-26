@@ -35,28 +35,61 @@
   </div>
 </div>
 
-<div id="app" class="app hidden">
-  <header class="topbar">
-    <div class="brand"><span class="brand-icon">🎯</span><span>OJT<b>Hunter</b></span></div>
-    <nav class="tabs">
-      <button class="tab active" data-view="board" type="button">Board</button>
-      <button class="tab" data-view="vault" type="button">Vault</button>
-      <button class="tab" data-view="deadlines" type="button">
-        Deadlines<span id="deadline-badge" class="badge hidden"></span>
+<div id="app" class="shell hidden">
+  <aside class="sidebar">
+    <div class="side-user">
+      <span id="avatar" class="avatar"></span>
+      <span id="user-email" class="side-email"></span>
+    </div>
+
+    <nav class="side-nav">
+      <button class="nav-item active" data-view="board" type="button">
+        <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="4" height="10" rx="1"/><rect x="6" y="1" width="4" height="6" rx="1"/><rect x="11" y="1" width="4" height="8" rx="1"/></svg>
+        <span>Board</span>
+      </button>
+      <button class="nav-item" data-view="vault" type="button">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h6L14 6v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5z"/><path d="M5.5 8h5M5.5 11h3.5"/></svg>
+        <span>Vault</span>
+      </button>
+      <button class="nav-item" data-view="deadlines" type="button">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg>
+        <span>Deadlines</span>
+        <span id="deadline-badge" class="badge hidden"></span>
       </button>
     </nav>
-    <div class="account">
-      <span id="user-email" class="user-email"></span>
-      <button id="btn-signout" class="btn ghost sm" type="button">Sign out</button>
+
+    <div class="side-foot">
+      <button id="btn-signout" class="nav-item" type="button">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2H3.5A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14H6M10.5 11 14 8l-3.5-3M14 8H6"/></svg>
+        <span>Sign out</span>
+      </button>
     </div>
-  </header>
+  </aside>
 
   <main class="main">
 
     <section id="view-board" class="view active">
+      <header class="view-head">
+        <div>
+          <p class="eyebrow">Internship pipeline</p>
+          <h1 class="greet" id="greeting">Welcome back!</h1>
+        </div>
+        <div class="head-stat">
+          <p class="eyebrow">Total applications</p>
+          <p class="big-num" id="stat-total">0</p>
+        </div>
+      </header>
+
+      <div class="kpis">
+        <div class="kpi"><p class="eyebrow">Active targets</p><p class="kpi-num" id="stat-active">0</p><p class="kpi-sub">not rejected</p></div>
+        <div class="kpi"><p class="eyebrow">Interviewing</p><p class="kpi-num" id="stat-interview">0</p><p class="kpi-sub">in conversation</p></div>
+        <div class="kpi"><p class="eyebrow">Offers</p><p class="kpi-num" id="stat-offer">0</p><p class="kpi-sub">on the table</p></div>
+        <div class="kpi"><p class="eyebrow">Overdue</p><p class="kpi-num" id="stat-overdue">0</p><p class="kpi-sub">needs action now</p></div>
+      </div>
+
       <div class="toolbar">
         <input id="board-search" class="input search" type="search" placeholder="Search company or position…">
-        <div id="board-stats" class="stats"></div>
+        <span class="spacer"></span>
         <button id="btn-add-app" class="btn primary" type="button">+ Application</button>
       </div>
       <div id="kanban" class="kanban"></div>
@@ -67,6 +100,22 @@
     </section>
 
     <section id="view-vault" class="view">
+      <header class="view-head">
+        <div>
+          <p class="eyebrow">Document vault</p>
+          <h1 class="greet">Your requirements locker</h1>
+        </div>
+        <div class="head-stat">
+          <p class="eyebrow">Stored links</p>
+          <p class="big-num" id="vault-count">0</p>
+        </div>
+      </header>
+
+      <div class="panel coverage">
+        <p class="eyebrow">OJT requirements checklist</p>
+        <div id="doc-coverage" class="cov-grid"></div>
+      </div>
+
       <div class="toolbar">
         <div id="doc-filters" class="chips">
           <button class="chip active" data-filter="all" type="button">All</button>
@@ -87,6 +136,22 @@
     </section>
 
     <section id="view-deadlines" class="view">
+      <header class="view-head">
+        <div>
+          <p class="eyebrow">Reminders</p>
+          <h1 class="greet">Stay ahead of HR</h1>
+        </div>
+        <div class="head-stat">
+          <p class="eyebrow">Needs action</p>
+          <p class="big-num" id="dl-count">0</p>
+        </div>
+      </header>
+
+      <div class="panel chart-panel">
+        <p class="eyebrow">Next 14 days</p>
+        <div id="dl-chart" class="dl-chart"></div>
+      </div>
+
       <div id="deadlines-wrap" class="deadlines-wrap"></div>
       <div id="deadlines-empty" class="empty hidden">
         <p>Nothing due. Set deadlines on your applications to see reminders here.</p>
