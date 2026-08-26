@@ -89,7 +89,14 @@ input, select, textarea { font: inherit; color: var(--text); }
 .field { display: flex; flex-direction: column; gap: .25rem; }
 .field > span { font-size: .72rem; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
 .field select option { background: var(--panel); }
-textarea { resize: vertical; }
+textarea {
+  resize: vertical;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .5rem .7rem;
+}
+textarea:focus-visible { outline: none; border-color: var(--dim); }
 
 /* ---------- auth ---------- */
 
