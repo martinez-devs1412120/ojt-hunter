@@ -92,10 +92,20 @@ const app = {
       const pct = Math.round((counts[s.key] / max) * 100);
       const row = document.createElement('div');
       row.className = 'funnel-step';
-      row.innerHTML = `
-        <span class="funnel-step-label">${s.label}</span>
-        <div class="funnel-step-bar"><span class="funnel-step-fill" style="width:${pct}%;background:${s.color}"></span></div>
-        <span class="funnel-step-count">${counts[s.key]}</span>`;
+      const label = document.createElement('span');
+      label.className = 'funnel-step-label';
+      label.textContent = s.label;
+      const bar = document.createElement('div');
+      bar.className = 'funnel-step-bar';
+      const fill = document.createElement('span');
+      fill.className = 'funnel-step-fill';
+      fill.style.width = pct + '%';
+      fill.style.background = s.color;
+      bar.appendChild(fill);
+      const cnt = document.createElement('span');
+      cnt.className = 'funnel-step-count';
+      cnt.textContent = counts[s.key];
+      row.append(label, bar, cnt);
       el.appendChild(row);
     }
   },
@@ -112,13 +122,28 @@ const app = {
     }
     const sorted = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
     const el = document.getElementById('source-list');
-    el.innerHTML = sorted.length
-      ? sorted.map(([src, cnt]) => `
-        <div class="source-item">
-          <span class="source-name">${src}</span>
-          <div class="source-meta"><span>${cnt} application${cnt>1?'s':''}</span></div>
-        </div>`).join('')
-      : '<p style="color:var(--faint);font-size:.85rem;text-align:center;padding:1rem">Add job post URLs to track sources</p>';
+    el.innerHTML = '';
+    if (!sorted.length) {
+      const p = document.createElement('p');
+      p.style.cssText = 'color:var(--faint);font-size:.85rem;text-align:center;padding:1rem';
+      p.textContent = 'Add job post URLs to track sources';
+      el.appendChild(p);
+      return;
+    }
+    for (const [src, cnt] of sorted) {
+      const item = document.createElement('div');
+      item.className = 'source-item';
+      const name = document.createElement('span');
+      name.className = 'source-name';
+      name.textContent = src;
+      const meta = document.createElement('div');
+      meta.className = 'source-meta';
+      const span = document.createElement('span');
+      span.textContent = cnt + ' application' + (cnt > 1 ? 's' : '');
+      meta.appendChild(span);
+      item.append(name, meta);
+      el.appendChild(item);
+    }
   },
 
   renderPrep() {

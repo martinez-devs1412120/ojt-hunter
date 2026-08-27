@@ -3,3 +3,6 @@ __pycache__/
 Thumbs.db
 .DS_Store
 *.log
+js/config.js
+.env
+.env.local

@@ -51,20 +51,69 @@ alter table public.applications enable row level security;
 alter table public.documents enable row level security;
 alter table public.notes enable row level security;
 
-create policy "own applications all"
-  on public.applications for all
-  using ((select auth.uid()) = user_id)
-  with check ((select auth.uid()) = user_id);
+drop policy if exists "own applications all" on public.applications;
+drop policy if exists "own documents all" on public.documents;
+drop policy if exists "own notes all" on public.notes;
+drop policy if exists "own applications select" on public.applications;
+drop policy if exists "own applications insert" on public.applications;
+drop policy if exists "own applications update" on public.applications;
+drop policy if exists "own applications delete" on public.applications;
+drop policy if exists "own documents select" on public.documents;
+drop policy if exists "own documents insert" on public.documents;
+drop policy if exists "own documents update" on public.documents;
+drop policy if exists "own documents delete" on public.documents;
+drop policy if exists "own notes select" on public.notes;
+drop policy if exists "own notes insert" on public.notes;
+drop policy if exists "own notes update" on public.notes;
+drop policy if exists "own notes delete" on public.notes;
 
-create policy "own documents all"
-  on public.documents for all
+create policy "own applications select"
+  on public.applications for select
+  using ((select auth.uid()) = user_id);
+create policy "own applications insert"
+  on public.applications for insert
+  with check ((select auth.uid()) = user_id);
+create policy "own applications update"
+  on public.applications for update
   using ((select auth.uid()) = user_id)
   with check ((select auth.uid()) = user_id);
+create policy "own applications delete"
+  on public.applications for delete
+  using ((select auth.uid()) = user_id);
 
-create policy "own notes all"
-  on public.notes for all
+create policy "own documents select"
+  on public.documents for select
+  using ((select auth.uid()) = user_id);
+create policy "own documents insert"
+  on public.documents for insert
+  with check ((select auth.uid()) = user_id);
+create policy "own documents update"
+  on public.documents for update
   using ((select auth.uid()) = user_id)
   with check ((select auth.uid()) = user_id);
+create policy "own documents delete"
+  on public.documents for delete
+  using ((select auth.uid()) = user_id);
+
+create policy "own notes select"
+  on public.notes for select
+  using ((select auth.uid()) = user_id);
+create policy "own notes insert"
+  on public.notes for insert
+  with check (
+    (select auth.uid()) = user_id
+    and exists (select 1 from public.applications where id = application_id and user_id = (select auth.uid()))
+  );
+create policy "own notes update"
+  on public.notes for update
+  using ((select auth.uid()) = user_id)
+  with check (
+    (select auth.uid()) = user_id
+    and exists (select 1 from public.applications where id = application_id and user_id = (select auth.uid()))
+  );
+create policy "own notes delete"
+  on public.notes for delete
+  using ((select auth.uid()) = user_id);
 
 create or replace function public.touch_updated_at()
 returns trigger language plpgsql as $$
