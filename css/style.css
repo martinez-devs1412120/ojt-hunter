@@ -245,7 +245,19 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   font-weight: 800;
   letter-spacing: 0;
 }
-.side-foot { margin-top: auto; }
+.side-tools {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  margin-top: .5rem;
+}
+.tool-btn { font-size: .7rem; }
+.tool-btn svg { width: 14px; height: 14px; }
+.tool-btn span { display: none; }
+@media (min-width: 900px) {
+  .tool-btn span { display: inline; }
+}
+.side-foot { margin-top: auto; padding-top: .8rem; border-top: 1px solid var(--border-soft); }
 
 .main { overflow: hidden; padding: 1.6rem 2rem 1.2rem; }
 .view { display: none; height: 100%; }
@@ -606,6 +618,80 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
 ::-webkit-scrollbar-thumb { background: #262a30; border-radius: 99px; }
 ::-webkit-scrollbar-track { background: transparent; }
 
+.prep-tabs {
+  display: flex;
+  gap: .3rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding-bottom: .8rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+.prep-tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: .4rem .85rem;
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--faint);
+  transition: all .15s;
+}
+.prep-tab:hover { color: var(--dim); border-color: var(--dim); }
+.prep-tab.active { background: var(--white); border-color: var(--white); color: #0e1013; }
+
+.prep-section { display: none; }
+.prep-section.active { display: block; animation: fade-in .15s; }
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.prep-q { margin-bottom: 1.2rem; }
+.prep-q h4 { margin: 0 0 .5rem; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--faint); }
+.prep-q ul { margin: 0; padding-left: 1.2rem; }
+.prep-q li { margin: .3rem 0; font-size: .85rem; line-height: 1.5; color: var(--dim); }
+.prep-q li strong { color: var(--text); }
+
+.prep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .8rem; }
+.prep-card {
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+}
+.prep-card h4 { margin: 0 0 .6rem; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--faint); }
+.prep-card ul { margin: 0; padding-left: 1rem; }
+.prep-card li { margin: .25rem 0; font-size: .8rem; color: var(--dim); }
+.prep-card code { background: rgba(255,255,255,.06); padding: .1rem .35rem; border-radius: 4px; font-size: .75rem; color: var(--yellow); }
+
+.funnel-steps { display: flex; flex-direction: column; gap: .6rem; }
+.funnel-step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: .7rem 1rem;
+}
+.funnel-step-label { width: 140px; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: var(--faint); text-align: right; }
+.funnel-step-bar { flex: 1; height: 14px; background: var(--border); border-radius: 7px; overflow: hidden; position: relative; }
+.funnel-step-fill { height: 100%; border-radius: 7px; background: linear-gradient(90deg, var(--white), var(--dim)); transition: width .4s ease; }
+.funnel-step-count { width: 60px; text-align: right; font-size: .85rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+
+.source-list { display: flex; flex-direction: column; gap: .5rem; }
+.source-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: .6rem .9rem;
+}
+.source-name { font-weight: 600; font-size: .85rem; color: var(--text); }
+.source-meta { display: flex; gap: 1rem; font-size: .7rem; color: var(--faint); }
+.source-meta span { display: flex; align-items: center; gap: .3rem; }
+
 @media (max-width: 900px) {
   .shell { grid-template-columns: 64px 1fr; }
   .side-email, .nav-item span { display: none; }
@@ -618,4 +704,5 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   .kpis { grid-template-columns: repeat(2, 1fr); }
   .cov-grid { grid-template-columns: 1fr; }
   .grid-2 { grid-template-columns: 1fr; }
+  .prep-tabs { justify-content: center; }
 }

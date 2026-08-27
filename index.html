@@ -56,14 +56,33 @@
         <span>Deadlines</span>
         <span id="deadline-badge" class="badge hidden"></span>
       </button>
+      <button class="nav-item" data-view="prep" type="button">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a1 1 0 0 1 1 1v2m-1-1H5m6 0h3M5 9a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/></svg>
+        <span>Prep</span>
+      </button>
+      <button class="nav-item" data-view="stats" type="button">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 13V7a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1z"/><path d="M5 13v-4M9 13v-7M13 13v-2"/></svg>
+        <span>Stats</span>
+      </button>
     </nav>
 
-    <div class="side-foot">
-      <button id="btn-signout" class="nav-item" type="button">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2H3.5A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14H6M10.5 11 14 8l-3.5-3M14 8H6"/></svg>
-        <span>Sign out</span>
-      </button>
-    </div>
+<div class="side-foot">
+        <button id="btn-signout" class="nav-item" type="button">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2H3.5A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14H6M10.5 11 14 8l-3.5-3M14 8H6"/></svg>
+          <span>Sign out</span>
+        </button>
+        <div class="side-tools">
+          <button id="btn-export" class="nav-item tool-btn" type="button" title="Export all data (JSON)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4v8M8 12l4-4-4-4M4 12h8"/></svg>
+            <span>Export</span>
+          </button>
+          <button id="btn-import" class="nav-item tool-btn" type="button" title="Import data (JSON)">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v8M8 12l-4-4 4-4M12 12h-8"/></svg>
+            <span>Import</span>
+          </button>
+          <input id="import-file" type="file" accept=".json" hidden>
+        </div>
+      </div>
   </aside>
 
   <main class="main">
@@ -88,9 +107,9 @@
       </div>
 
       <div class="toolbar">
-        <input id="board-search" class="input search" type="search" placeholder="Search company or position…">
+        <input id="board-search" class="input search" type="search" placeholder="Search company or position… (press /)">
         <span class="spacer"></span>
-        <button id="btn-add-app" class="btn primary" type="button">+ Application</button>
+        <button id="btn-add-app" class="btn primary" type="button">+ Application (N)</button>
       </div>
       <div id="kanban" class="kanban"></div>
       <div id="board-empty" class="empty hidden">
@@ -126,7 +145,7 @@
           <button class="chip" data-filter="medical" type="button">Medical</button>
           <button class="chip" data-filter="other" type="button">Other</button>
         </div>
-        <button id="btn-add-doc" class="btn primary" type="button">+ Document link</button>
+        <button id="btn-add-doc" class="btn primary" type="button">+ Document (D)</button>
       </div>
       <div id="doc-grid" class="doc-grid"></div>
       <div id="doc-empty" class="empty hidden">
@@ -160,6 +179,54 @@
 
   </main>
 </div>
+
+<section id="view-prep" class="view">
+      <header class="view-head">
+        <div>
+          <p class="eyebrow">Interview prep</p>
+          <h1 class="greet">Cheatsheet & STAR stories</h1>
+        </div>
+        <div class="head-stat">
+          <p class="eyebrow">Ready when you are</p>
+        </div>
+      </header>
+
+      <div class="panel">
+        <div class="prep-tabs">
+          <button class="prep-tab active" data-prep="questions" type="button">Common Questions</button>
+          <button class="prep-tab" data-prep="star" type="button">STAR Framework</button>
+          <button class="prep-tab" data-prep="tech" type="button">Tech Topics</button>
+          <button class="prep-tab" data-prep="behavioral" type="button">Behavioral</button>
+        </div>
+        <div id="prep-content"></div>
+      </div>
+    </section>
+
+    <section id="view-stats" class="view">
+      <header class="view-head">
+        <div>
+          <p class="eyebrow">Pipeline analytics</p>
+          <h1 class="greet">Your conversion funnel</h1>
+        </div>
+      </header>
+
+      <div class="kpis">
+        <div class="kpi"><p class="eyebrow">Applied → Interview</p><p class="kpi-num" id="stat-rate-ai">0%</p><p class="kpi-sub">conversion</p></div>
+        <div class="kpi"><p class="eyebrow">Interview → Offer</p><p class="kpi-num" id="stat-rate-io">0%</p><p class="kpi-sub">conversion</p></div>
+        <div class="kpi"><p class="eyebrow">Avg days to interview</p><p class="kpi-num" id="stat-avg-di">—</p><p class="kpi-sub">from apply</p></div>
+        <div class="kpi"><p class="eyebrow">Avg days to offer</p><p class="kpi-num" id="stat-avg-do">—</p><p class="kpi-sub">from interview</p></div>
+      </div>
+
+      <div class="panel funnel-panel">
+        <p class="eyebrow">Funnel breakdown</p>
+        <div class="funnel-steps" id="funnel-steps"></div>
+      </div>
+
+      <div class="panel source-panel">
+        <p class="eyebrow">Top sources</p>
+        <div class="source-list" id="source-list"></div>
+      </div>
+    </section>
 
 <dialog id="modal-application" class="modal">
   <form id="form-application" method="dialog">
@@ -246,5 +313,10 @@
 <script src="js/reminders.js"></script>
 <script src="js/kanban.js"></script>
 <script src="js/app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
 </body>
 </html>

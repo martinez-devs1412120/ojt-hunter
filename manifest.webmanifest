@@ -1,0 +1,17 @@
+{
+  "name": "OJT Hunter",
+  "short_name": "OJT Hunter",
+  "description": "Internship pipeline dashboard — Kanban, vault, reminders, prep",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#101214",
+  "theme_color": "#101214",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
