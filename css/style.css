@@ -335,6 +335,12 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   gap: .5rem;
   padding: .7rem .85rem;
 }
+.stat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
 .col-title {
   font-size: .68rem;
   font-weight: 700;

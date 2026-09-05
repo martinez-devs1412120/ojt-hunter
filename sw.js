@@ -1,24 +1,28 @@
-const CACHE = 'ojt-hunter-v2';
+const CACHE = 'ojt-hunter-v3';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/config.js',
-  '/js/csp.js',
-  '/js/supabase.js',
-  '/js/db.js',
-  '/js/auth.js',
-  '/js/kanban.js',
-  '/js/vault.js',
-  '/js/reminders.js',
-  '/js/app.js',
-  '/manifest.webmanifest',
-  '/sw.js'
+  './',
+  './index.html',
+  './css/style.css',
+  './js/config.js',
+  './js/csp.js',
+  './js/supabase.js',
+  './js/db.js',
+  './js/auth.js',
+  './js/kanban.js',
+  './js/vault.js',
+  './js/reminders.js',
+  './js/app.js',
+  './manifest.webmanifest',
+  './sw.js'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
+    // Cache each asset independently so one missing file (e.g. a fresh clone
+    // without config.js) doesn't abort the whole install
+    caches.open(CACHE)
+      .then(c => Promise.allSettled(ASSETS.map(a => c.add(a))))
+      .then(() => self.skipWaiting())
   );
 });
 

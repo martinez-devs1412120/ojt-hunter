@@ -82,10 +82,11 @@ const reminders = {
       const d = new Date(today); d.setDate(d.getDate() + i);
       days.push(d);
     }
-    const counts = days.map(d => {
-      const iso = d.toISOString().slice(0, 10);
-      return apps.filter(a => a.deadline === iso).length;
-    });
+    // Local date string — toISOString() would shift a day in UTC+ timezones
+    const pad = n => String(n).padStart(2, '0');
+    const localISO = d =>
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const counts = days.map(d => apps.filter(a => a.deadline === localISO(d)).length);
     const max = Math.max(1, ...counts);
     const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     days.forEach((d, i) => {

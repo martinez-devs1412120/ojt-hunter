@@ -13,6 +13,7 @@
     "style-src 'self'",
     "img-src 'self' data:",
     "font-src 'self'",
+    "manifest-src 'self'",
     'connect-src ' + connect,
     "form-action 'none'",
     "base-uri 'none'",

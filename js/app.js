@@ -1,5 +1,6 @@
 const app = {
   currentUser: null,
+  activePrep: 'questions',
 
   async enter(user) {
     if (!isConfigured()) return;
@@ -39,34 +40,35 @@ const app = {
   },
 
   renderStatsView(apps) {
-    const applied = apps.filter(a => a.status !== 'to_apply').length;
-    const interviewed = apps.filter(a => ['interview', 'offer'].includes(a.status)).length;
-    const offered = apps.filter(a => a.status === 'offer').length;
+    const applied = apps.filter(a => a.applied_at || a.status !== 'to_apply').length;
+    const interviewed = apps.filter(a =>
+      a.interviewed_at || ['interview', 'offer'].includes(a.status)).length;
+    const offered = apps.filter(a => a.offered_at || a.status === 'offer').length;
 
     const rateAI = applied ? Math.round((interviewed / applied) * 100) : 0;
     const rateIO = interviewed ? Math.round((offered / interviewed) * 100) : 0;
     setNum('stat-rate-ai', rateAI + '%');
     setNum('stat-rate-io', rateIO + '%');
 
-    const withInterview = apps.filter(a => a.applied_at && a.status !== 'to_apply' && a.status !== 'rejected');
+    // Exact once the interviewed_at/offered_at columns exist (sql/schema.sql);
+    // rows from before that fall back to updated_at as the stage date.
+    const stageDate = (a, col, activeStatuses) =>
+      a[col] ? new Date(a[col])
+        : (activeStatuses.includes(a.status) && a.updated_at ? new Date(a.updated_at) : null);
+
     let sumDI = 0, cntDI = 0;
-    for (const a of withInterview) {
-      if (a.applied_at && a.status === 'interview' || a.status === 'offer') {
-        const applied = new Date(a.applied_at);
-        const interviewed = a.status === 'interview' ? a.updated_at ? new Date(a.updated_at) : new Date() : new Date();
-        sumDI += (interviewed - applied) / 864e5;
-        cntDI++;
-      }
+    for (const a of apps) {
+      const from = a.applied_at ? new Date(a.applied_at) : null;
+      const to = stageDate(a, 'interviewed_at', ['interview', 'offer']);
+      if (from && to && to >= from) { sumDI += (to - from) / 864e5; cntDI++; }
     }
     setNum('stat-avg-di', cntDI ? Math.round(sumDI / cntDI) + 'd' : '—');
 
-    const withOffer = apps.filter(a => a.status === 'offer' && a.applied_at);
     let sumDO = 0, cntDO = 0;
-    for (const a of withOffer) {
-      const interviewed = a.updated_at ? new Date(a.updated_at) : new Date();
-      const offered = a.updated_at ? new Date(a.updated_at) : new Date();
-      sumDO += (offered - interviewed) / 864e5;
-      cntDO++;
+    for (const a of apps) {
+      const from = stageDate(a, 'interviewed_at', ['interview', 'offer']);
+      const to = stageDate(a, 'offered_at', ['offer']);
+      if (from && to && to >= from) { sumDO += (to - from) / 864e5; cntDO++; }
     }
     setNum('stat-avg-do', cntDO ? Math.round(sumDO / cntDO) + 'd' : '—');
 
@@ -75,13 +77,9 @@ const app = {
   },
 
   renderFunnel(apps) {
-    const stages = [
-      { key: 'to_apply', label: 'To Apply', color: '#575d66' },
-      { key: 'applied', label: 'Applied', color: '#4f8cff' },
-      { key: 'interview', label: 'Interview', color: '#d4bc80' },
-      { key: 'offer', label: 'Offer', color: '#8fbf9f' },
-      { key: 'rejected', label: 'Rejected', color: '#cf7d7d' }
-    ];
+    const stages = STATUSES.map(key => ({
+      key, label: STATUS_LABELS[key], color: STATUS_COLORS[key]
+    }));
     const counts = {};
     for (const s of stages) counts[s.key] = apps.filter(a => a.status === s.key).length;
     const max = Math.max(1, ...Object.values(counts));
@@ -181,22 +179,26 @@ const app = {
 
     tabs.forEach(tab => {
       tab.onclick = () => {
+        app.activePrep = tab.dataset.prep;
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         content.innerHTML = sections[tab.dataset.prep] || '';
       };
     });
-    // Init first
-    content.innerHTML = sections.questions;
+    const active = sections[app.activePrep] ? app.activePrep : 'questions';
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.prep === active));
+    content.innerHTML = sections[active];
   },
 
-  exportData() {
+  async exportData() {
+    let notes = [];
+    try { notes = await fetchAllNotes(); } catch {}
     const data = {
       exportedAt: new Date().toISOString(),
-      version: 1,
+      version: 2,
       applications: kanban.apps,
       documents: vault.docs,
-      notes: [] // could fetch all notes if needed
+      notes
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -205,26 +207,70 @@ const app = {
     a.download = `ojt-hunter-backup-${new Date().toISOString().slice(0,10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast('Backup downloaded', 'ok');
+    toast(`Backup downloaded — ${kanban.apps.length} applications, ${vault.docs.length} documents, ${notes.length} notes`, 'ok');
   },
 
   async importData(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async e => {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (!data.applications || !data.documents) throw new Error('Invalid backup format');
-          // Note: this would need Supabase upserts — for now just show toast
-          toast('Import parsed — Supabase restore not yet implemented', 'err');
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      };
-      reader.onerror = reject;
-      reader.readAsText(file);
-    });
+    const data = JSON.parse(await file.text());
+    if (!Array.isArray(data.applications) || !Array.isArray(data.documents)) {
+      throw new Error('Invalid backup format');
+    }
+    const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const newId = () => (self.crypto && crypto.randomUUID ? crypto.randomUUID() : undefined);
+    const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : null);
+    const iso = v => (typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? v : null);
+    const date = v => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+
+    const apps = data.applications
+      .filter(r => r && typeof r.company === 'string' && r.company.trim())
+      .map(r => ({
+        id: UUID.test(r.id || '') ? r.id : newId(),
+        company: r.company.trim().slice(0, 120),
+        position: str(r.position, 120) || 'OJT Intern',
+        hr_email: str(r.hr_email, 254),
+        source_url: sanitizeUrl(r.source_url),
+        status: STATUSES.includes(r.status) ? r.status : 'to_apply',
+        priority: ['low', 'medium', 'high'].includes(r.priority) ? r.priority : 'medium',
+        deadline: date(r.deadline),
+        follow_up_at: iso(r.follow_up_at),
+        applied_at: iso(r.applied_at),
+        interviewed_at: iso(r.interviewed_at),
+        offered_at: iso(r.offered_at),
+        ojt_hours: Number.isFinite(Number(r.ojt_hours)) && r.ojt_hours !== null && r.ojt_hours !== ''
+          ? Math.min(10000, Math.max(0, Math.trunc(Number(r.ojt_hours)))) : null,
+        created_at: iso(r.created_at),
+        updated_at: iso(r.updated_at)
+      }));
+    const appIds = new Set(apps.map(a => a.id));
+
+    const docs = data.documents
+      .map(r => r && typeof r.name === 'string' ? { ...r, link: sanitizeUrl(r.link) } : null)
+      .filter(r => r && r.name.trim() && r.link)
+      .map(r => ({
+        id: UUID.test(r.id || '') ? r.id : newId(),
+        name: r.name.trim().slice(0, 120),
+        type: vault.DOC_META[r.type] ? r.type : 'other',
+        link: r.link,
+        version: str(r.version, 60),
+        notes: str(r.notes, 2000),
+        created_at: iso(r.created_at)
+      }));
+
+    const notes = (Array.isArray(data.notes) ? data.notes : [])
+      .filter(r => r && typeof r.content === 'string' && r.content.trim()
+        && appIds.has(r.application_id))
+      .map(r => ({
+        id: UUID.test(r.id || '') ? r.id : newId(),
+        application_id: r.application_id,
+        content: r.content.trim().slice(0, 10000),
+        created_at: iso(r.created_at)
+      }));
+
+    const nApps = await upsertRows('applications', apps);
+    const nDocs = await upsertRows('documents', docs);
+    const nNotes = await upsertRows('notes', notes);
+    await Promise.all([kanban.load(), vault.load()]);
+    toast(`Imported ${nApps} applications, ${nDocs} documents, ${nNotes} notes (merge — nothing deleted)`, 'ok');
   },
 
   leave() {
@@ -240,6 +286,10 @@ const app = {
     kanban.init();
     vault.init();
     reminders.init();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
 
     document.querySelectorAll('.nav-item[data-view]').forEach(tab => {
       tab.onclick = () => {
@@ -276,6 +326,7 @@ const app = {
         closeAllModals();
         return;
       }
+      if (!app.currentUser) return;
       if (e.target.matches('input, textarea, select')) return;
       switch (e.key.toLowerCase()) {
         case '/': e.preventDefault(); document.getElementById('board-search').focus(); break;

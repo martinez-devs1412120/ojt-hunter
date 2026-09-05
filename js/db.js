@@ -22,6 +22,16 @@ function sanitizeUrl(raw) {
   } catch (e) { return null; }
 }
 
+// getSession reads the local session (refreshing if expired) — no extra
+// network round-trip per write, unlike auth.getUser().
+async function currentUserId() {
+  const { data, error } = await sb().auth.getSession();
+  if (error) throw error;
+  const user = data?.session?.user;
+  if (!user) throw new Error('Not signed in');
+  return user.id;
+}
+
 async function fetchApplications() {
   const { data, error } = await sb().from('applications')
     .select('*')
@@ -31,9 +41,9 @@ async function fetchApplications() {
 }
 
 async function insertApplication(fields) {
-  const user = (await sb().auth.getUser()).data.user;
+  const user_id = await currentUserId();
   const { data, error } = await sb().from('applications')
-    .insert({ ...fields, user_id: user.id })
+    .insert({ ...fields, user_id })
     .select()
     .single();
   if (error) throw error;
@@ -64,9 +74,9 @@ async function fetchDocuments() {
 }
 
 async function insertDocument(fields) {
-  const user = (await sb().auth.getUser()).data.user;
+  const user_id = await currentUserId();
   const { data, error } = await sb().from('documents')
-    .insert({ ...fields, user_id: user.id })
+    .insert({ ...fields, user_id })
     .select()
     .single();
   if (error) throw error;
@@ -98,13 +108,37 @@ async function fetchNotes(applicationId) {
 }
 
 async function insertNote(applicationId, content) {
-  const user = (await sb().auth.getUser()).data.user;
+  const user_id = await currentUserId();
   const { data, error } = await sb().from('notes')
-    .insert({ application_id: applicationId, content, user_id: user.id })
+    .insert({ application_id: applicationId, content, user_id })
     .select()
     .single();
   if (error) throw error;
   return data;
+}
+
+async function fetchAllNotes() {
+  const { data, error } = await sb().from('notes')
+    .select('*')
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// Used by import: merge rows by id (owned rows are updated, unknown ids are
+// inserted). Chunked to stay under request size limits.
+async function upsertRows(table, rows) {
+  if (!rows.length) return 0;
+  const user_id = await currentUserId();
+  const CHUNK = 50;
+  let done = 0;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const chunk = rows.slice(i, i + CHUNK).map(r => ({ ...r, user_id }));
+    const { error } = await sb().from(table).upsert(chunk, { onConflict: 'id' });
+    if (error) throw error;
+    done += chunk.length;
+  }
+  return done;
 }
 
 async function deleteNote(id) {

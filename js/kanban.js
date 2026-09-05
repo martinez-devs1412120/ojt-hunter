@@ -35,9 +35,11 @@ const kanban = {
       const head = document.createElement('div');
       head.className = 'col-head';
       head.innerHTML = `
-        <span class="stat-dot" style="background:${STATUS_COLORS[status]}"></span>
+        <span class="stat-dot"></span>
         <span class="col-title">${STATUS_LABELS[status]}</span>
         <span class="col-count">${colApps.length}</span>`;
+      // Set via CSSOM — inline style attributes in innerHTML are blocked by CSP
+      head.querySelector('.stat-dot').style.background = STATUS_COLORS[status];
       col.appendChild(head);
 
       const body = document.createElement('div');
@@ -46,7 +48,7 @@ const kanban = {
       if (!colApps.length) {
         body.innerHTML = '<div class="col-empty">Drop here</div>';
       }
-      for (const app of colApps) body.appendChild(kanban.card(app));
+      for (const row of colApps) body.appendChild(kanban.card(row));
 
       col.appendChild(body);
 
@@ -59,17 +61,22 @@ const kanban = {
         e.preventDefault();
         col.classList.remove('drag-over');
         const id = e.dataTransfer.getData('text/plain');
-        const app = kanban.apps.find(a => a.id === id);
-        if (!app || app.status === status) return;
-        const prevStatus = STATUS_LABELS[app.status];
+        const row = kanban.apps.find(a => a.id === id);
+        if (!row || row.status === status) return;
+        const prevStatus = STATUS_LABELS[row.status];
         const newStatus = STATUS_LABELS[status];
         try {
           const fields = { status };
-          if (status === 'applied' && !app.applied_at) fields.applied_at = new Date().toISOString();
+          const now = new Date().toISOString();
+          if (['applied', 'interview', 'offer'].includes(status) && !row.applied_at) {
+            fields.applied_at = now;
+          }
+          if (status === 'interview' && !row.interviewed_at) fields.interviewed_at = now;
+          if (status === 'offer' && !row.offered_at) fields.offered_at = now;
           const updated = await updateApplication(id, fields);
-          Object.assign(app, updated);
+          Object.assign(row, updated);
           kanban.sync();
-          toast(`"${app.company}" moved ${prevStatus} → ${newStatus}`, 'ok');
+          toast(`"${row.company}" moved ${prevStatus} → ${newStatus}`, 'ok');
         } catch (err) { toast(err.message, 'err'); }
       });
 
@@ -80,36 +87,36 @@ const kanban = {
       'hidden', !(list.length === 0));
   },
 
-  card(app) {
+  card(row) {
     const el = document.createElement('article');
-    el.className = `card pr-${app.priority}`;
+    el.className = `card pr-${row.priority}`;
     el.draggable = true;
-    el.dataset.id = app.id;
+    el.dataset.id = row.id;
 
     const pills = [];
-    const dl = reminders.deadlineState(app);
+    const dl = reminders.deadlineState(row);
     if (dl) {
       if (dl.days < 0) pills.push(`<span class="pill overdue">⚠ ${-dl.days}d overdue</span>`);
       else if (dl.days === 0) pills.push('<span class="pill overdue">Due today</span>');
       else if (dl.days <= 7) pills.push(`<span class="pill due-soon">⏰ in ${dl.days}d</span>`);
-      else pills.push(`<span class="pill">📅 ${new Date(app.deadline + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span>`);
+      else pills.push(`<span class="pill">📅 ${new Date(row.deadline + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span>`);
     }
-    if (app.ojt_hours) pills.push(`<span class="pill">${app.ojt_hours}h OJT</span>`);
+    if (row.ojt_hours) pills.push(`<span class="pill">${row.ojt_hours}h OJT</span>`);
 
     el.innerHTML = `
       <div class="card-company"></div>
       <div class="card-position"></div>
       <div class="card-meta">${pills.join('')}</div>`;
-    el.querySelector('.card-company').textContent = app.company;
-    el.querySelector('.card-position').textContent = app.position;
+    el.querySelector('.card-company').textContent = row.company;
+    el.querySelector('.card-position').textContent = row.position;
 
     el.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('text/plain', app.id);
+      e.dataTransfer.setData('text/plain', row.id);
       e.dataTransfer.effectAllowed = 'move';
       el.classList.add('dragging');
     });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
-    el.onclick = () => kanban.openModal(app);
+    el.onclick = () => kanban.openModal(row);
 
     return el;
   },
@@ -187,9 +194,15 @@ const kanban = {
         follow_up_at: val('f-followup') ? new Date(val('f-followup')).toISOString() : null,
         ojt_hours: val('f-hours') ? parseInt(val('f-hours'), 10) : null
       };
-      if (fields.status === 'applied' && !kanban.editingId) {
-        fields.applied_at = new Date().toISOString();
+      // Stamp funnel timestamps the first time an app reaches a stage
+      const prev = kanban.editingId
+        ? kanban.apps.find(a => a.id === kanban.editingId) : null;
+      const now = new Date().toISOString();
+      if (!prev?.applied_at && ['applied', 'interview', 'offer'].includes(fields.status)) {
+        fields.applied_at = now;
       }
+      if (!prev?.interviewed_at && fields.status === 'interview') fields.interviewed_at = now;
+      if (!prev?.offered_at && fields.status === 'offer') fields.offered_at = now;
       try {
         let saved;
         if (kanban.editingId) saved = await updateApplication(kanban.editingId, fields);

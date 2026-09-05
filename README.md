@@ -8,6 +8,7 @@
 - **Document Vault** — store links to your Resume, TOR, Good Moral, NDA, and medical certs (Google Drive/Dropbox). One click **Copy link** when HR asks "send your resume".
 - **Deadline Reminders** — per-application deadlines and follow-up reminders. The Deadlines tab groups them into Overdue / Due this week / Later, badges the tab, and fires browser notifications for same-day deadlines.
 - **Company Notes** — paste interview questions, culture intel, salary info, or HR contact history right on each application card.
+- **Installable PWA** — service worker + web manifest, relative paths so it works both locally and on GitHub Pages project sites.
 
 ## Getting started
 
@@ -26,7 +27,7 @@ python -m http.server 8081
 ### 2. Connect Supabase (one-time)
 
 1. Create a free project at [supabase.com](https://supabase.com)
-2. Open **SQL Editor** in the dashboard, paste the contents of [`sql/schema.sql`](sql/schema.sql), and run it. This creates the tables + Row Level Security so every user only ever touches their own data. Safe to re-run.
+2. Open **SQL Editor** in the dashboard, paste the contents of [`sql/schema.sql`](sql/schema.sql), and run it. This creates the tables + Row Level Security so every user only ever touches their own data. Safe to re-run. Already have data? Re-running adds the `interviewed_at`/`offered_at` funnel columns and backfills what it can — the Stats tab uses them.
 3. Copy your project URL and **anon key** from Project Settings → API, then paste them into `js/config.js`
 
 The anon key is public by design — protection comes entirely from RLS policies.
@@ -48,7 +49,7 @@ Sign up with any email/password (8+ chars), add your first target company, and s
 
 | Table | Purpose |
 |---|---|
-| `applications` | Company, position, HR email, job URL, status, priority, deadline, follow-up time, OJT hours |
+| `applications` | Company, position, HR email, job URL, status, priority, deadline, follow-up time, OJT hours, applied/interview/offer timestamps |
 | `documents`   | Vault entries: name, type, link, version label, notes |
 | `notes`       | Free-form company/interview notes attached to an application |
 

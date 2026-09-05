@@ -1,5 +1,6 @@
 -- OJT Hunter schema
--- Run this once in Supabase Dashboard > SQL Editor > New query
+-- Run in Supabase Dashboard > SQL Editor > New query. Safe to re-run:
+-- existing setups get the funnel timestamp columns added on re-run.
 
 create extension if not exists pgcrypto;
 
@@ -177,3 +178,13 @@ do $$ begin
   alter table public.notes
     add constraint note_content_len check (char_length(content) between 1 and 10000);
 exception when duplicate_object then null; end $$;
+
+-- Funnel timestamps: set by the app the first time an application reaches
+-- the interview / offer stage. Backfill approximates from current state.
+alter table public.applications add column if not exists interviewed_at timestamptz;
+alter table public.applications add column if not exists offered_at timestamptz;
+
+update public.applications set interviewed_at = updated_at
+  where status in ('interview','offer') and interviewed_at is null;
+update public.applications set offered_at = updated_at
+  where status = 'offer' and offered_at is null;
