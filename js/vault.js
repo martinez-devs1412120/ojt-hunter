@@ -4,12 +4,12 @@ const vault = {
   editingId: null,
 
   DOC_META: {
-    resume:     { label: 'Resume',    icon: '📄' },
-    tor:        { label: 'TOR',       icon: '🎓' },
-    good_moral: { label: 'Good Moral', icon: '🤝' },
-    nda:        { label: 'NDA',       icon: '✍️' },
-    medical:    { label: 'Medical',   icon: '🩺' },
-    other:      { label: 'Other',     icon: '📁' }
+    resume:     { label: 'Resume' },
+    tor:        { label: 'TOR' },
+    good_moral: { label: 'Good Moral' },
+    nda:        { label: 'NDA' },
+    medical:    { label: 'Medical' },
+    other:      { label: 'Other' }
   },
 
   REQUIRED: ['resume', 'tor', 'good_moral', 'nda', 'medical'],
@@ -33,34 +33,44 @@ const vault = {
 
     for (const d of list) {
       const meta = vault.DOC_META[d.type] || vault.DOC_META.other;
-      const safeLink = sanitizeUrl(d.link);
+      const safeLink = d.storage_path ? null : sanitizeUrl(d.link);
+      const openable = !!safeLink || !!d.storage_path;
       const card = document.createElement('div');
       card.className = 'doc-card';
       card.innerHTML = `
         <div class="doc-head">
-          <span class="doc-icon">${meta.icon}</span>
+          <span class="doc-icon"></span>
           <span class="doc-name"></span>
           <span class="doc-type-tag dt-${d.type}">${meta.label}</span>
         </div>
+        ${d.storage_path ? '<span class="doc-stored">stored privately — links expire after 1 hour</span>' : ''}
         ${d.version ? '<span class="doc-version"></span>' : ''}
         ${d.notes ? '<span class="doc-notes"></span>' : ''}
         <div class="doc-actions">
           <button class="btn sm primary act-copy" type="button">Copy link</button>
-          ${safeLink ? '<a class="btn sm" target="_blank" rel="noopener noreferrer">Open</a>' : '<span class="pill overdue">invalid link</span>'}
+          ${openable ? '<button class="btn sm act-open" type="button">Open</button>' : '<span class="pill overdue">invalid link</span>'}
           <button class="btn sm ghost act-edit" type="button">Edit</button>
         </div>`;
+      card.querySelector('.doc-icon').innerHTML = ICONS[d.type] || ICONS.other;
       card.querySelector('.doc-name').textContent = d.name;
       if (d.version) card.querySelector('.doc-version').textContent = d.version;
       if (d.notes) card.querySelector('.doc-notes').textContent = d.notes;
 
-      card.querySelector('.act-copy').onclick = () => {
-        navigator.clipboard.writeText(d.link)
-          .then(() => toast('Link copied — paste it into your email!', 'ok'))
-          .catch(() => toast('Copy failed', 'err'));
+      card.querySelector('.act-copy').onclick = async () => {
+        try {
+          const url = d.storage_path ? await createSignedUrl(d.storage_path) : d.link;
+          await navigator.clipboard.writeText(url);
+          toast(d.storage_path ? 'Private link copied — expires in 1 hour' : 'Link copied — paste it into your email!', 'ok');
+        } catch { toast('Copy failed', 'err'); }
       };
-      if (safeLink) {
-        const open = card.querySelector('.doc-actions a');
-        open.href = safeLink;
+      const openBtn = card.querySelector('.act-open');
+      if (openBtn) {
+        openBtn.onclick = async () => {
+          try {
+            const url = d.storage_path ? await createSignedUrl(d.storage_path) : safeLink;
+            window.open(url, '_blank', 'noopener');
+          } catch (err) { toast(err.message, 'err'); }
+        };
       }
       card.querySelector('.act-edit').onclick = () => vault.openModal(d);
 
@@ -74,7 +84,8 @@ const vault = {
     holder.innerHTML = '';
     for (const type of vault.REQUIRED) {
       const meta = vault.DOC_META[type];
-      const have = vault.docs.some(d => d.type === type && sanitizeUrl(d.link));
+      const have = vault.docs.some(d =>
+        d.type === type && (d.storage_path || sanitizeUrl(d.link)));
       const row = document.createElement('div');
       row.className = 'cov-row ' + (have ? 'have' : 'miss');
       row.innerHTML = `
@@ -103,13 +114,19 @@ const vault = {
     const m = document.getElementById('modal-document');
     vault.editingId = doc?.id || null;
     document.getElementById('doc-modal-title').textContent =
-      doc ? 'Edit document' : 'Add document link';
+      doc ? 'Edit document' : 'Add document';
     document.getElementById('btn-delete-doc').classList.toggle('hidden', !doc);
     document.getElementById('d-name').value = doc?.name || '';
     document.getElementById('d-type').value = doc?.type || presetType || 'resume';
     document.getElementById('d-version').value = doc?.version || '';
-    document.getElementById('d-link').value = doc?.link || '';
     document.getElementById('d-notes').value = doc?.notes || '';
+    const fileInput = document.getElementById('d-file');
+    fileInput.value = null;
+    const linkInput = document.getElementById('d-link');
+    linkInput.value = '';
+    linkInput.placeholder = doc?.storage_path
+      ? 'Private file stored — upload a new file to replace it'
+      : 'https://drive.google.com/…';
     m.showModal();
   },
 
@@ -130,23 +147,48 @@ const vault = {
       const btn = e.target.querySelector('button[type="submit"]');
       if (btn.disabled) return;
       btn.disabled = true;
+      const fileInput = document.getElementById('d-file');
+      const file = fileInput.files[0];
+      const prev = vault.editingId ? vault.docs.find(d => d.id === vault.editingId) : null;
+      let uploadedPath = null;
+      let replacedPath = null;
       try {
-        const safeLink = sanitizeUrl(val('d-link'));
-        if (!safeLink) { toast('Link must start with https:// or http://', 'err'); return; }
         const fields = {
           name: val('d-name'),
           type: val('d-type'),
           version: val('d-version') || null,
-          link: safeLink,
           notes: val('d-notes') || null
         };
+        if (file) {
+          const invalid = validateVaultFile(file);
+          if (invalid) { toast(invalid, 'err'); return; }
+          uploadedPath = await uploadVaultFile(file);
+          fields.storage_path = uploadedPath;
+          fields.link = null;
+          replacedPath = prev?.storage_path || null;
+        } else if (prev?.storage_path) {
+          // Editing an uploaded doc without replacing the file
+          fields.storage_path = prev.storage_path;
+          fields.link = null;
+        } else {
+          const safeLink = sanitizeUrl(val('d-link'));
+          if (!safeLink) { toast('Add a link or choose a file to upload', 'err'); return; }
+          fields.link = safeLink;
+          fields.storage_path = null;
+        }
+        let saved = false;
         try {
           if (vault.editingId) await updateDocument(vault.editingId, fields);
           else await insertDocument(fields);
+          saved = true;
           closeAllModals();
           await vault.load();
           toast(vault.editingId ? 'Document updated' : 'Document added to vault', 'ok');
         } catch (err) { toast(err.message, 'err'); }
+        // Clean up orphaned uploads: the replaced file on success, the new
+        // upload if the row failed to save
+        if (uploadedPath && !saved) { try { await deleteStorageObject(uploadedPath); } catch {} }
+        if (replacedPath && saved) { try { await deleteStorageObject(replacedPath); } catch {} }
       } finally {
         btn.disabled = false;
       }
@@ -154,12 +196,20 @@ const vault = {
 
     document.getElementById('btn-delete-doc').onclick = async () => {
       if (!vault.editingId || !confirm('Delete this document from the vault?')) return;
+      const btn = document.getElementById('btn-delete-doc');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      const doc = vault.docs.find(d => d.id === vault.editingId);
       try {
         await deleteDocument(vault.editingId);
         closeAllModals();
         await vault.load();
         toast('Document deleted');
+        if (doc?.storage_path) {
+          try { await deleteStorageObject(doc.storage_path); } catch {}
+        }
       } catch (err) { toast(err.message, 'err'); }
+      finally { btn.disabled = false; }
     };
   }
 };

@@ -5,7 +5,7 @@
 ## Features
 
 - **Kanban Board** — drag applications through `To Apply → Applied → Interview → Offer` (plus `Rejected`). Priority stripes, search, and status counts.
-- **Document Vault** — store links to your Resume, TOR, Good Moral, NDA, and medical certs (Google Drive/Dropbox). One click **Copy link** when HR asks "send your resume".
+- **Document Vault** — keep your Resume, TOR, Good Moral, NDA, and medical certs ready two ways: paste a Google Drive/Dropbox link, or upload the file itself to your own private cloud bucket. **Copy link** creates a share URL that self-expires in 1 hour, right when HR asks "send your resume".
 - **Deadline Reminders** — per-application deadlines and follow-up reminders. The Deadlines tab groups them into Overdue / Due this week / Later, badges the tab, and fires browser notifications for same-day deadlines.
 - **Company Notes** — paste interview questions, culture intel, salary info, or HR contact history right on each application card.
 - **Installable PWA** — service worker + web manifest, relative paths so it works both locally and on GitHub Pages project sites.
@@ -39,6 +39,7 @@ Sign up with any email/password (8+ chars), add your first target company, and s
 ## Security model
 
 - **Row Level Security** — every table locks each row to `auth.uid()`; the server rejects any cross-user read/write, so the public anon key can't leak anyone's data
+- **Private file storage** — uploads go to a private bucket whose policies confine every read/write/delete to the caller's own `auth.uid()` folder; sharing creates a *signed URL* that self-expires after 1 hour, so a pasted link can't leak your files forever
 - **Content Security Policy** — injected from your own config at startup: `default-src 'none'`, scripts only from itself + jsDelivr, network requests only to your Supabase project. Any injected script, remote frame, or unexpected request is blocked by the browser
 - **Pinned dependencies** — supabase-js is pinned to an exact version with a Subresource Integrity hash, so a compromised or mutated CDN file cannot execute
 - **XSS-safe rendering** — user content (names, notes, versions) is inserted via `textContent`, never raw HTML; links are scheme-allowlisted to http(s) so `javascript:` URLs are rejected at both the form and the render layer

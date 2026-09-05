@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <title>OJT Hunter — Internship Pipeline Dashboard</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e2b93d' stroke-width='2'><circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='4.5'/><circle cx='12' cy='12' r='1.2' fill='%23e2b93d' stroke='none'/></svg>">
 <link rel="stylesheet" href="css/style.css">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#101214">
@@ -16,7 +16,12 @@
 
 <div id="auth-screen" class="auth-screen">
   <div class="auth-card">
-    <div class="auth-logo">🎯</div>
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.75"/>
+        <circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/>
+      </svg>
+    </div>
     <h1>OJT Hunter</h1>
     <p class="auth-sub">Your internship pipeline, organized.</p>
     <div class="auth-tabs">
@@ -117,6 +122,9 @@
         <button id="btn-add-app" class="btn primary" type="button">+ Application (N)</button>
       </div>
       <div id="kanban" class="kanban"></div>
+      <div id="board-loading" class="empty">
+        <p>Loading your pipeline…</p>
+      </div>
       <div id="board-empty" class="empty hidden">
         <p>No applications yet.</p>
         <button id="empty-add-app" class="btn primary" type="button">Add your first target</button>
@@ -295,7 +303,11 @@
       </label>
       <label class="field"><span>Version / label</span><input id="d-version" placeholder="v2, 2026, …"></label>
     </div>
-    <label class="field"><span>Link *</span><input id="d-link" type="url" required placeholder="https://drive.google.com/…"></label>
+    <label class="field"><span>Link</span><input id="d-link" type="url" placeholder="https://drive.google.com/…"></label>
+    <label class="field"><span>Or upload a private file</span>
+      <input id="d-file" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx">
+      <small class="field-hint">Stored in your own private cloud bucket — shared links expire after 1 hour. Uploading replaces the link.</small>
+    </label>
     <label class="field"><span>Notes</span><textarea id="d-notes" rows="2" placeholder="Shared setting: anyone with the link can view"></textarea></label>
     <div class="modal-actions">
       <button id="btn-delete-doc" class="btn danger ghost" type="button">Delete</button>
@@ -329,6 +341,7 @@
 <script src="js/config.js"></script>
 <script src="js/csp.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js" integrity="sha384-ysv13JVP3fufiEXfjML9OdCa/rRbMJvUBOWyor82wfuK8INNZAvmbxHgKIHi+oqz" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="js/icons.js"></script>
 <script src="js/supabase.js"></script>
 <script src="js/db.js"></script>
 <script src="js/auth.js"></script>

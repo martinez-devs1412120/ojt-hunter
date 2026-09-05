@@ -40,10 +40,10 @@ const reminders = {
 
     const wrap = document.getElementById('deadlines-wrap');
     const groups = {
-      overdue: { title: '🔴 Overdue — act now', rows: [] },
-      week: { title: '🟠 Due within 7 days', rows: [] },
-      followup: { title: '🟣 Follow-up reminders', rows: [] },
-      upcoming: { title: '🟢 Later', rows: [] }
+      overdue: { title: 'Overdue — act now', rows: [] },
+      week: { title: 'Due within 7 days', rows: [] },
+      followup: { title: 'Follow-up reminders', rows: [] },
+      upcoming: { title: 'Later', rows: [] }
     };
 
     for (const a of apps) {
@@ -147,7 +147,7 @@ const reminders = {
       if (!urgent) continue;
       reminders.notified.add(id);
       try {
-        new Notification('🎯 OJT Hunter reminder', {
+        new Notification('OJT Hunter', {
           body: `${alert.app.company}: ${alert.type === 'followup'
             ? 'time to send your follow-up email!'
             : `application deadline ${alert.days < 0 ? 'passed ' + (-alert.days) + 'd ago' : 'is today'}!`}`

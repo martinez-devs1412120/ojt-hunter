@@ -251,15 +251,20 @@ const app = {
         updated_at: iso(r.updated_at)
       }));
     const appIds = new Set(apps.map(a => a.id));
+    // Uploaded files live under {user_id}/ — keep the path only when
+    // restoring into the same account, else the object is unreachable
+    const uid = await currentUserId();
 
     const docs = data.documents
       .map(r => r && typeof r.name === 'string' ? { ...r, link: sanitizeUrl(r.link) } : null)
-      .filter(r => r && r.name.trim() && r.link)
+      .filter(r => r && r.name.trim() && (r.link || r.storage_path))
       .map(r => ({
         id: UUID.test(r.id || '') ? r.id : newId(),
         name: r.name.trim().slice(0, 120),
         type: vault.DOC_META[r.type] ? r.type : 'other',
         link: r.link,
+        storage_path: typeof r.storage_path === 'string' && r.storage_path.startsWith(uid + '/')
+          ? r.storage_path : null,
         version: str(r.version, 60),
         notes: str(r.notes, 2000),
         created_at: iso(r.created_at)
@@ -285,6 +290,7 @@ const app = {
   leave() {
     app.currentUser = null;
     kanban.apps = [];
+    kanban.loaded = false;
     vault.docs = [];
     document.getElementById('app').classList.add('hidden');
     auth.showScreen();

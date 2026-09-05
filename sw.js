@@ -1,10 +1,11 @@
-const CACHE = 'ojt-hunter-v4';
+const CACHE = 'ojt-hunter-v5';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
   './js/config.js',
   './js/csp.js',
+  './js/icons.js',
   './js/supabase.js',
   './js/db.js',
   './js/auth.js',

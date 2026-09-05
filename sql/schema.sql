@@ -205,3 +205,51 @@ do $$ begin
   alter table public.documents
     add constraint doc_link_http check (link ~* '^https?://');
 exception when duplicate_object then null; end $$;
+
+-- Cloud file storage: documents can either carry an external link or an
+-- uploaded file in the private 'vault-files' bucket.
+alter table public.documents add column if not exists storage_path text;
+
+alter table public.documents alter column link drop not null;
+alter table public.documents drop constraint if exists doc_link_len;
+do $$ begin
+  alter table public.documents
+    add constraint doc_link_rule check (
+      storage_path is not null
+      or (link is not null and char_length(link) between 1 and 2048)
+    );
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter table public.documents
+    add constraint doc_storage_path_len check (char_length(storage_path) <= 1024);
+exception when duplicate_object then null; end $$;
+
+-- Private bucket: one folder per user ({user_id}/...), 10 MB limit
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('vault-files', 'vault-files', false, 10485760,
+  array['application/pdf','image/png','image/jpeg','image/webp',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+on conflict (id) do update
+  set file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+-- Bucket policies: every operation confined to the caller's own folder
+drop policy if exists "own vault-files select" on storage.objects;
+drop policy if exists "own vault-files insert" on storage.objects;
+drop policy if exists "own vault-files update" on storage.objects;
+drop policy if exists "own vault-files delete" on storage.objects;
+
+create policy "own vault-files select"
+  on storage.objects for select
+  using (bucket_id = 'vault-files' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "own vault-files insert"
+  on storage.objects for insert
+  with check (bucket_id = 'vault-files' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "own vault-files update"
+  on storage.objects for update
+  using (bucket_id = 'vault-files' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "own vault-files delete"
+  on storage.objects for delete
+  using (bucket_id = 'vault-files' and (storage.foldername(name))[1] = auth.uid()::text);

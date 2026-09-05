@@ -1,10 +1,12 @@
 const kanban = {
   apps: [],
+  loaded: false,
   editingId: null,
   currentNotes: [],
 
   async load() {
     kanban.apps = await fetchApplications();
+    kanban.loaded = true;
     kanban.sync();
   },
 
@@ -83,6 +85,7 @@ const kanban = {
       board.appendChild(col);
     }
 
+    document.getElementById('board-loading').classList.toggle('hidden', kanban.loaded);
     document.getElementById('board-empty').classList.toggle(
       'hidden', !(list.length === 0));
   },
@@ -96,10 +99,10 @@ const kanban = {
     const pills = [];
     const dl = reminders.deadlineState(row);
     if (dl) {
-      if (dl.days < 0) pills.push(`<span class="pill overdue">⚠ ${-dl.days}d overdue</span>`);
+      if (dl.days < 0) pills.push(`<span class="pill overdue">${-dl.days}d overdue</span>`);
       else if (dl.days === 0) pills.push('<span class="pill overdue">Due today</span>');
-      else if (dl.days <= 7) pills.push(`<span class="pill due-soon">⏰ in ${dl.days}d</span>`);
-      else pills.push(`<span class="pill">📅 ${new Date(row.deadline + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span>`);
+      else if (dl.days <= 7) pills.push(`<span class="pill due-soon">in ${dl.days}d</span>`);
+      else pills.push(`<span class="pill">due ${new Date(row.deadline + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span>`);
     }
     if (row.ojt_hours) pills.push(`<span class="pill">${row.ojt_hours}h OJT</span>`);
 
@@ -169,7 +172,7 @@ const kanban = {
       item.innerHTML = `
         <p></p>
         <span class="note-time">${new Date(n.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span>
-        <button class="note-del" title="Delete note" type="button">✕</button>`;
+        <button class="note-del" title="Delete note" aria-label="Delete note" type="button">${ICONS.x}</button>`;
       item.querySelector('p').textContent = n.content;
       item.querySelector('.note-del').onclick = async () => {
         try {

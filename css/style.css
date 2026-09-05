@@ -120,7 +120,13 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   box-shadow: var(--shadow);
   text-align: center;
 }
-.auth-logo { font-size: 1.9rem; }
+.auth-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: .2rem;
+  color: var(--yellow);
+}
+.auth-logo svg { width: 42px; height: 42px; }
 .auth-card h1 { letter-spacing: -.01em; margin-top: .3rem; }
 .auth-sub { color: var(--dim); margin: .35rem 0 1.4rem; font-size: .88rem; }
 .auth-tabs {
@@ -474,7 +480,12 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   gap: .4rem;
 }
 .doc-head { display: flex; align-items: center; gap: .55rem; }
-.doc-icon { font-size: 1.15rem; }
+.doc-icon {
+  display: flex;
+  align-items: center;
+  color: var(--dim);
+}
+.doc-icon svg { width: 18px; height: 18px; }
 .doc-name { font-weight: 700; font-size: .9rem; word-break: break-word; }
 .doc-type-tag {
   margin-left: auto;
@@ -749,4 +760,21 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   outline: 2px solid var(--yellow);
   outline-offset: 2px;
 }
+
+.doc-stored {
+  display: block;
+  margin-top: .2rem;
+  font-size: .72rem;
+  letter-spacing: .02em;
+  color: var(--faint);
+}
+
+.field-hint {
+  display: block;
+  margin-top: .3rem;
+  font-size: .72rem;
+  font-weight: 400;
+  color: var(--faint);
+}
+
 

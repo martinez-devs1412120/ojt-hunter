@@ -65,6 +65,48 @@ async function deleteApplication(id) {
   if (error) throw error;
 }
 
+// ---- Cloud file storage (private 'vault-files' bucket, one folder per user)
+const VAULT_BUCKET = 'vault-files';
+const VAULT_MAX_BYTES = 10 * 1024 * 1024;
+const VAULT_ALLOWED_EXT = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'doc', 'docx'];
+
+function validateVaultFile(file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (!VAULT_ALLOWED_EXT.includes(ext)) {
+    return 'Allowed file types: ' + VAULT_ALLOWED_EXT.join(', ');
+  }
+  if (file.size > VAULT_MAX_BYTES) return 'File is too large — 10 MB max';
+  return null;
+}
+
+// Objects live at {user_id}/{timestamp}-{safe-name}; RLS on the bucket
+// confines every operation to the caller's own folder.
+async function uploadVaultFile(file) {
+  const uid = await currentUserId();
+  const safeName = file.name.replace(/[^A-Za-z0-9._-]+/g, '_').slice(-120);
+  const path = `${uid}/${Date.now()}-${safeName}`;
+  const { error } = await sb().storage.from(VAULT_BUCKET).upload(path, file, {
+    cacheControl: '3600',
+    upsert: false
+  });
+  if (error) throw error;
+  return path;
+}
+
+async function deleteStorageObject(path) {
+  if (!path) return;
+  const { error } = await sb().storage.from(VAULT_BUCKET).remove([path]);
+  if (error) throw error;
+}
+
+// Short-lived signed URL — private by default, links self-expire
+async function createSignedUrl(path, expiresInSeconds = 3600) {
+  const { data, error } = await sb().storage.from(VAULT_BUCKET)
+    .createSignedUrl(path, expiresInSeconds);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
 async function fetchDocuments() {
   const { data, error } = await sb().from('documents')
     .select('*')
