@@ -132,7 +132,7 @@ const kanban = {
     return el;
   },
 
-  openModal(app) {
+  openModal(app, prefill) {
     const m = document.getElementById('modal-application');
     kanban.editingId = app?.id || null;
     document.getElementById('app-modal-title').textContent =
@@ -148,6 +148,15 @@ const kanban = {
     setVal('f-deadline', app?.deadline);
     setVal('f-followup', toLocalInput(app?.follow_up_at));
     document.getElementById('f-hours').value = app?.ojt_hours ?? '';
+
+    // Prefill from a captured job post (bookmarklet / ?add= link)
+    if (!app && prefill) {
+      const g = guessFromTitle(prefill.title);
+      if (g.company) setVal('f-company', g.company);
+      if (g.position) setVal('f-position', g.position);
+      setVal('f-url', prefill.url);
+      document.getElementById('app-modal-title').textContent = 'New application — from web';
+    }
 
     kanban.currentNotes = [];
     if (app) kanban.loadNotes(app.id);
@@ -189,6 +198,44 @@ const kanban = {
   init() {
     document.getElementById('btn-add-app').onclick = () => kanban.openModal(null);
     document.getElementById('board-search').oninput = () => kanban.render();
+
+    // Save from anywhere: quick-add by URL + bookmarklet setup
+    document.getElementById('btn-capture').onclick = () => {
+      document.getElementById('c-url').value = '';
+      document.getElementById('bm-code').textContent = buildBookmarklet();
+      document.getElementById('modal-capture').showModal();
+    };
+    document.getElementById('form-capture').onsubmit = async e => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      if (btn.disabled) return;
+      btn.disabled = true;
+      try {
+        const safe = sanitizeUrl(val('c-url'));
+        if (!safe) { toast('Paste a full URL starting with https://', 'err'); return; }
+        const fields = {
+          company: guessCompanyFromUrl(safe) || 'Untitled',
+          position: 'OJT Intern',
+          source_url: safe,
+          status: 'to_apply'
+        };
+        try {
+          const saved = await insertApplication(fields);
+          kanban.apps.push(saved);
+          kanban.sync();
+          closeAllModals();
+          toast(`"${saved.company}" captured — add details later`, 'ok');
+        } catch (err) { toast(err.message, 'err'); }
+      } finally {
+        btn.disabled = false;
+      }
+    };
+    document.getElementById('btn-copy-bm').onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(buildBookmarklet());
+        toast('Bookmarklet copied — paste it as a bookmark URL', 'ok');
+      } catch { toast('Copy failed', 'err'); }
+    };
 
     document.getElementById('form-application').onsubmit = async e => {
       e.preventDefault();
@@ -281,4 +328,52 @@ function toLocalInput(iso) {
   const d = new Date(iso);
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
+}
+
+// --- Save from anywhere (capture) helpers ---
+
+// "Frontend Dev at Acme | JobStreet" → position + company guesses.
+// Splits at the rightmost separator first (site names trail the title);
+// if an "at Something" segment sits before it, that's the real employer.
+function guessFromTitle(title) {
+  const t = (title || '').replace(/\s+/g, ' ').trim();
+  if (!t) return { position: '', company: '' };
+  const lower = t.toLowerCase();
+  let best = -1, bestSep = '';
+  for (const sep of [' at ', ' – ', ' - ', ' | ']) {
+    const i = lower.lastIndexOf(sep);
+    if (i > best) { best = i; bestSep = sep; }
+  }
+  if (best <= 2 || t.length - best - bestSep.length <= 1) {
+    return { position: t.slice(0, 120), company: '' };
+  }
+  const at = lower.lastIndexOf(' at ');
+  if (at > 0 && at < best && bestSep !== ' at ') {
+    const mid = t.slice(at + 4, best).trim();
+    // Mid segment must look like a name, not "least 200"
+    if (/^[A-Z]/.test(mid) && !/\d/.test(mid)) {
+      return {
+        position: t.slice(0, at).trim().slice(0, 120),
+        company: mid.slice(0, 120)
+      };
+    }
+  }
+  return {
+    position: t.slice(0, best).trim().slice(0, 120),
+    company: t.slice(best + bestSep.length).trim().slice(0, 120)
+  };
+}
+
+function guessCompanyFromUrl(u) {
+  try {
+    const h = new URL(u).hostname.replace(/^www\./, '');
+    const skip = ['jobs', 'careers', 'boards', 'apply', 'job', 'www'];
+    const label = h.split('.').find(l => !skip.includes(l)) || h.split('.')[0];
+    return label ? label.charAt(0).toUpperCase() + label.slice(1) : '';
+  } catch { return ''; }
+}
+
+function buildBookmarklet() {
+  const appUrl = location.origin + location.pathname;
+  return `javascript:(function(){window.open('${appUrl}?add='+encodeURIComponent(location.href)+'&t='+encodeURIComponent(document.title),'_blank');})();`;
 }

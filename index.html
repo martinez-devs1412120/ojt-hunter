@@ -119,6 +119,7 @@
       <div class="toolbar">
         <input id="board-search" class="input search" type="search" placeholder="Search company or position… (press /)">
         <span class="spacer"></span>
+        <button id="btn-capture" class="btn" type="button" title="Save a job post from any site">Save from web</button>
         <button id="btn-add-app" class="btn primary" type="button">+ Application (N)</button>
       </div>
       <div id="kanban" class="kanban"></div>
@@ -319,6 +320,26 @@
 </dialog>
 
 <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+<dialog id="modal-capture" class="modal narrow">
+  <form id="form-capture" method="dialog">
+    <h2>Save from anywhere</h2>
+    <label class="field"><span>Paste a job post URL</span><input id="c-url" type="url" placeholder="https://…"></label>
+    <div class="modal-actions">
+      <span class="spacer"></span>
+      <button class="btn primary" type="submit">Create card</button>
+    </div>
+  </form>
+  <hr class="capture-divider">
+  <h3 class="capture-sub">One-time setup: the bookmarklet</h3>
+  <p class="capture-hint">Create a new bookmark in your browser and paste this as its address. On any job post page, click the bookmark — OJT Hunter opens with the link and title prefilled. If a site blocks bookmarklets, copy the URL and use the field above instead.</p>
+  <code id="bm-code" class="bm-code"></code>
+  <div class="modal-actions">
+    <button id="btn-copy-bm" class="btn sm" type="button">Copy bookmarklet</button>
+    <span class="spacer"></span>
+    <button class="btn ghost cancel-btn" type="button">Close</button>
+  </div>
+</dialog>
 
 <dialog id="modal-password" class="modal narrow">
   <form id="form-password" method="dialog">

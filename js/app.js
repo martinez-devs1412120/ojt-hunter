@@ -1,3 +1,16 @@
+// Bookmarklet / capture link: ?add=<job-url>&t=<page-title>.
+// Read and cleaned before anything else renders; consumed after sign-in.
+let pendingCapture = null;
+(() => {
+  const p = new URLSearchParams(location.search);
+  const url = p.get('add');
+  if (!url) return;
+  const safe = sanitizeUrl(url);
+  if (!safe) return;
+  pendingCapture = { url: safe, title: (p.get('t') || '').slice(0, 300) };
+  history.replaceState(null, '', location.pathname);
+})();
+
 const app = {
   currentUser: null,
   activePrep: 'questions',
@@ -19,6 +32,10 @@ const app = {
       app.renderStatsView(kanban.apps);
       app.renderPrep();
       if (auth.needsNewPassword) auth.promptNewPassword();
+      if (pendingCapture) {
+        kanban.openModal(null, pendingCapture);
+        pendingCapture = null;
+      }
       if (!app.backupReminded && kanban.apps.length &&
           Date.now() - (+localStorage.getItem('ojt-last-export') || 0) > 14 * 864e5) {
         app.backupReminded = true;

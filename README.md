@@ -6,6 +6,7 @@
 
 - **Kanban Board** — drag applications through `To Apply → Applied → Interview → Offer` (plus `Rejected`). Priority stripes, search, and status counts.
 - **Document Vault** — keep your Resume, TOR, Good Moral, NDA, and medical certs ready two ways: paste a Google Drive/Dropbox link, or upload the file itself to your own private cloud bucket. **Copy link** creates a share URL that self-expires in 1 hour, right when HR asks "send your resume".
+- **Save from anywhere** — one-time bookmarklet: click it on any job posting page and OJT Hunter opens with the URL and title prefilled (Huntr-style capture, no extension needed); or paste a job URL to quick-add a card with the company guessed from the link.
 - **Deadline Reminders** — per-application deadlines and follow-up reminders. The Deadlines tab groups them into Overdue / Due this week / Later, badges the tab, and fires browser notifications for same-day deadlines.
 - **Company Notes** — paste interview questions, culture intel, salary info, or HR contact history right on each application card.
 - **Installable PWA** — service worker + web manifest, relative paths so it works both locally and on GitHub Pages project sites.

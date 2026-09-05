@@ -777,4 +777,36 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   color: var(--faint);
 }
 
+.capture-divider {
+  border: 0;
+  border-top: 1px solid var(--border-soft);
+  margin: 1rem 0;
+}
+.capture-sub {
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: var(--dim);
+}
+.capture-hint {
+  margin: .35rem 0 .5rem;
+  font-size: .78rem;
+  color: var(--faint);
+  line-height: 1.5;
+}
+.bm-code {
+  display: block;
+  margin: .4rem 0 .9rem;
+  padding: .55rem .7rem;
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  font-size: .72rem;
+  color: var(--dim);
+  word-break: break-all;
+  max-height: 5.5rem;
+  overflow: auto;
+}
+
+
 
