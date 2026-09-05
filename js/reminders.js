@@ -106,7 +106,7 @@ const reminders = {
     });
   },
 
-  row(app, state, kind) {
+  row(row, state, kind) {
     const el = document.createElement('div');
     el.className = 'dl-row';
     const d = kind === 'followup' ? new Date(state.date) : new Date(state.date + 'T00:00:00');
@@ -120,11 +120,19 @@ const reminders = {
       <span class="dl-date">${dateStr}</span>
       <span class="dl-main">
         <span class="dl-company"></span>
-        <span class="dl-sub">${label} · ${STATUS_LABELS[app.status]}</span>
+        <span class="dl-sub">${label} · ${STATUS_LABELS[row.status]}</span>
       </span>
-      <span class="dl-status st-${app.status}">${STATUS_LABELS[app.status]}</span>`;
-    el.querySelector('.dl-company').textContent = `${app.company} — ${app.position}`;
-    el.onclick = () => kanban.openModal(app);
+      <span class="dl-status st-${row.status}">${STATUS_LABELS[row.status]}</span>`;
+    el.querySelector('.dl-company').textContent = `${row.company} — ${row.position}`;
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        kanban.openModal(row);
+      }
+    });
+    el.onclick = () => kanban.openModal(row);
     return { el };
   },
 

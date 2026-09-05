@@ -116,6 +116,14 @@ const kanban = {
       el.classList.add('dragging');
     });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        kanban.openModal(row);
+      }
+    });
     el.onclick = () => kanban.openModal(row);
 
     return el;
@@ -181,47 +189,57 @@ const kanban = {
 
     document.getElementById('form-application').onsubmit = async e => {
       e.preventDefault();
-      const jobUrl = sanitizeUrl(val('f-url'));
-      if (val('f-url') && !jobUrl) { toast('Job post URL must start with https:// or http://', 'err'); return; }
-      const fields = {
-        company: val('f-company'),
-        position: val('f-position') || 'OJT Intern',
-        hr_email: val('f-email') || null,
-        source_url: jobUrl,
-        status: val('f-status'),
-        priority: val('f-priority'),
-        deadline: val('f-deadline') || null,
-        follow_up_at: val('f-followup') ? new Date(val('f-followup')).toISOString() : null,
-        ojt_hours: val('f-hours') ? parseInt(val('f-hours'), 10) : null
-      };
-      // Stamp funnel timestamps the first time an app reaches a stage
-      const prev = kanban.editingId
-        ? kanban.apps.find(a => a.id === kanban.editingId) : null;
-      const now = new Date().toISOString();
-      if (!prev?.applied_at && ['applied', 'interview', 'offer'].includes(fields.status)) {
-        fields.applied_at = now;
-      }
-      if (!prev?.interviewed_at && fields.status === 'interview') fields.interviewed_at = now;
-      if (!prev?.offered_at && fields.status === 'offer') fields.offered_at = now;
+      const btn = e.target.querySelector('button[type="submit"]');
+      if (btn.disabled) return;
+      btn.disabled = true;
       try {
-        let saved;
-        if (kanban.editingId) saved = await updateApplication(kanban.editingId, fields);
-        else saved = await insertApplication(fields);
+        const jobUrl = sanitizeUrl(val('f-url'));
+        if (val('f-url') && !jobUrl) { toast('Job post URL must start with https:// or http://', 'err'); return; }
+        const hours = Number(val('f-hours'));
+        const fields = {
+          company: val('f-company'),
+          position: val('f-position') || 'OJT Intern',
+          hr_email: val('f-email') || null,
+          source_url: jobUrl,
+          status: val('f-status'),
+          priority: val('f-priority'),
+          deadline: val('f-deadline') || null,
+          follow_up_at: val('f-followup') ? new Date(val('f-followup')).toISOString() : null,
+          ojt_hours: val('f-hours') !== '' && Number.isFinite(hours) ? Math.trunc(hours) : null
+        };
+        // Stamp funnel timestamps the first time an app reaches a stage
+        const prev = kanban.editingId
+          ? kanban.apps.find(a => a.id === kanban.editingId) : null;
+        const now = new Date().toISOString();
+        if (!prev?.applied_at && ['applied', 'interview', 'offer'].includes(fields.status)) {
+          fields.applied_at = now;
+        }
+        if (!prev?.interviewed_at && fields.status === 'interview') fields.interviewed_at = now;
+        if (!prev?.offered_at && fields.status === 'offer') fields.offered_at = now;
+        try {
+          let saved;
+          if (kanban.editingId) saved = await updateApplication(kanban.editingId, fields);
+          else saved = await insertApplication(fields);
 
-        const existing = kanban.apps.findIndex(a => a.id === saved.id);
-        if (existing >= 0) kanban.apps[existing] = saved;
-        else kanban.apps.push(saved);
+          const existing = kanban.apps.findIndex(a => a.id === saved.id);
+          if (existing >= 0) kanban.apps[existing] = saved;
+          else kanban.apps.push(saved);
 
-        closeAllModals();
-        kanban.sync();
-        toast(kanban.editingId ? 'Application updated' : `"${saved.company}" added`, 'ok');
-      } catch (err) { toast(err.message, 'err'); }
+          closeAllModals();
+          kanban.sync();
+          toast(kanban.editingId ? 'Application updated' : `"${saved.company}" added`, 'ok');
+        } catch (err) { toast(err.message, 'err'); }
+      } finally {
+        btn.disabled = false;
+      }
     };
 
     document.getElementById('btn-add-note').onclick = async () => {
       const input = document.getElementById('note-input');
+      const btn = document.getElementById('btn-add-note');
       const content = input.value.trim();
-      if (!content || !kanban.editingId) return;
+      if (!content || !kanban.editingId || btn.disabled) return;
+      btn.disabled = true;
       try {
         const note = await insertNote(kanban.editingId, content);
         kanban.currentNotes.unshift(note);
@@ -229,6 +247,7 @@ const kanban = {
         kanban.renderNotes();
         toast('Note saved', 'ok');
       } catch (err) { toast(err.message, 'err'); }
+      finally { btn.disabled = false; }
     };
 
     document.getElementById('note-input').addEventListener('keydown', e => {

@@ -27,7 +27,7 @@ python -m http.server 8081
 ### 2. Connect Supabase (one-time)
 
 1. Create a free project at [supabase.com](https://supabase.com)
-2. Open **SQL Editor** in the dashboard, paste the contents of [`sql/schema.sql`](sql/schema.sql), and run it. This creates the tables + Row Level Security so every user only ever touches their own data. Safe to re-run. Already have data? Re-running adds the `interviewed_at`/`offered_at` funnel columns and backfills what it can — the Stats tab uses them.
+2. Open **SQL Editor** in the dashboard, paste the contents of [`sql/schema.sql`](sql/schema.sql), and run it. This creates the tables + Row Level Security so every user only ever touches their own data. Safe to re-run. Already have data? Re-running adds the `interviewed_at`/`offered_at` funnel columns and the URL/email format constraints, and backfills what it can.
 3. Copy your project URL and **anon key** from Project Settings → API, then paste them into `js/config.js`
 
 The anon key is public by design — protection comes entirely from RLS policies.
@@ -42,7 +42,8 @@ Sign up with any email/password (8+ chars), add your first target company, and s
 - **Content Security Policy** — injected from your own config at startup: `default-src 'none'`, scripts only from itself + jsDelivr, network requests only to your Supabase project. Any injected script, remote frame, or unexpected request is blocked by the browser
 - **Pinned dependencies** — supabase-js is pinned to an exact version with a Subresource Integrity hash, so a compromised or mutated CDN file cannot execute
 - **XSS-safe rendering** — user content (names, notes, versions) is inserted via `textContent`, never raw HTML; links are scheme-allowlisted to http(s) so `javascript:` URLs are rejected at both the form and the render layer
-- **DB-level limits** — length/range constraints on every text and numeric column, enforced by Postgres even if the client is bypassed
+- **DB-level limits** — length/range constraints on every text and numeric column, plus URL-scheme (`https?://` only) and email-format checks, enforced by Postgres even if the client is bypassed
+- **Account recovery** — "Forgot password?" sends a Supabase reset email; the recovery link returns to the app and prompts you to set a new password. One-time setup: add your deployed URL (e.g. `https://you.github.io/ojt-hunter/`) under Supabase → Authentication → URL Configuration → Redirect URLs
 - **No referrer leakage** — `referrer: no-referrer` meta plus `rel="noopener noreferrer"` on outbound links
 
 ## Data model

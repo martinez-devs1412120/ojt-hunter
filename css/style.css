@@ -712,3 +712,41 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   .grid-2 { grid-template-columns: 1fr; }
   .prep-tabs { justify-content: center; }
 }
+
+/* ---------- hardening: offline banner, recovery, keyboard access ---------- */
+
+.off-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  background: var(--red);
+  color: #fff;
+  text-align: center;
+  padding: .45rem 1rem;
+  font-size: .82rem;
+}
+
+.auth-forgot {
+  display: block;
+  width: max-content;
+  margin: .35rem 0 0 auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--dim);
+  font: inherit;
+  font-size: .78rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.auth-forgot:hover { filter: brightness(1.4); }
+
+.card:focus-visible,
+.dl-row:focus-visible,
+.cov-row:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+

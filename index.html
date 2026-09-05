@@ -12,6 +12,8 @@
 </head>
 <body>
 
+<div id="off-banner" class="off-banner hidden">You're offline — changes can't be saved until you reconnect</div>
+
 <div id="auth-screen" class="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">🎯</div>
@@ -26,10 +28,11 @@
         <span>Email</span>
         <input id="auth-email" type="email" required autocomplete="email" placeholder="you@example.com">
       </label>
-      <label class="field">
+      <label class="field" id="field-password">
         <span>Password</span>
         <input id="auth-password" type="password" required minlength="8" autocomplete="current-password" placeholder="••••••••">
       </label>
+      <button id="btn-forgot" class="auth-forgot" type="button">Forgot password?</button>
       <p id="auth-hint" class="auth-hint hidden"></p>
       <button id="auth-submit" class="btn primary wide" type="submit">Sign in</button>
     </form>
@@ -303,7 +306,25 @@
   </form>
 </dialog>
 
-<div id="toasts" class="toasts"></div>
+<div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+<dialog id="modal-password" class="modal narrow">
+  <form id="form-password" method="dialog">
+    <h2>Set a new password</h2>
+    <label class="field"><span>New password (8+ characters)</span>
+      <input id="p-pass" type="password" minlength="8" required autocomplete="new-password" placeholder="••••••••">
+    </label>
+    <label class="field"><span>Confirm new password</span>
+      <input id="p-pass2" type="password" minlength="8" required autocomplete="new-password" placeholder="••••••••">
+    </label>
+    <p id="p-hint" class="auth-hint hidden"></p>
+    <div class="modal-actions">
+      <span class="spacer"></span>
+      <button class="btn ghost cancel-btn" type="button">Cancel</button>
+      <button class="btn primary" type="submit">Update password</button>
+    </div>
+  </form>
+</dialog>
 
 <script src="js/config.js"></script>
 <script src="js/csp.js"></script>

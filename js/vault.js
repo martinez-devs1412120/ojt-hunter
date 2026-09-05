@@ -86,6 +86,14 @@ const vault = {
       row.title = have
         ? `${meta.label} is in your vault — click to add another version`
         : `No ${meta.label} yet — click to add it`;
+      row.tabIndex = 0;
+      row.setAttribute('role', 'button');
+      row.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          vault.openModal(null, type);
+        }
+      });
       row.onclick = () => vault.openModal(null, type);
       holder.appendChild(row);
     }
@@ -119,22 +127,29 @@ const vault = {
 
     document.getElementById('form-document').onsubmit = async e => {
       e.preventDefault();
-      const safeLink = sanitizeUrl(val('d-link'));
-      if (!safeLink) { toast('Link must start with https:// or http://', 'err'); return; }
-      const fields = {
-        name: val('d-name'),
-        type: val('d-type'),
-        version: val('d-version') || null,
-        link: safeLink,
-        notes: val('d-notes') || null
-      };
+      const btn = e.target.querySelector('button[type="submit"]');
+      if (btn.disabled) return;
+      btn.disabled = true;
       try {
-        if (vault.editingId) await updateDocument(vault.editingId, fields);
-        else await insertDocument(fields);
-        closeAllModals();
-        await vault.load();
-        toast(vault.editingId ? 'Document updated' : 'Document added to vault', 'ok');
-      } catch (err) { toast(err.message, 'err'); }
+        const safeLink = sanitizeUrl(val('d-link'));
+        if (!safeLink) { toast('Link must start with https:// or http://', 'err'); return; }
+        const fields = {
+          name: val('d-name'),
+          type: val('d-type'),
+          version: val('d-version') || null,
+          link: safeLink,
+          notes: val('d-notes') || null
+        };
+        try {
+          if (vault.editingId) await updateDocument(vault.editingId, fields);
+          else await insertDocument(fields);
+          closeAllModals();
+          await vault.load();
+          toast(vault.editingId ? 'Document updated' : 'Document added to vault', 'ok');
+        } catch (err) { toast(err.message, 'err'); }
+      } finally {
+        btn.disabled = false;
+      }
     };
 
     document.getElementById('btn-delete-doc').onclick = async () => {

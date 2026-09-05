@@ -188,3 +188,20 @@ update public.applications set interviewed_at = updated_at
   where status in ('interview','offer') and interviewed_at is null;
 update public.applications set offered_at = updated_at
   where status = 'offer' and offered_at is null;
+
+-- URL scheme + email format checks (defense in depth; the client already
+-- enforces these before insert)
+do $$ begin
+  alter table public.applications
+    add constraint app_source_url_http check (source_url is null or source_url ~* '^https?://');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter table public.applications
+    add constraint app_hr_email_fmt check (hr_email is null or hr_email ~* '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  alter table public.documents
+    add constraint doc_link_http check (link ~* '^https?://');
+exception when duplicate_object then null; end $$;

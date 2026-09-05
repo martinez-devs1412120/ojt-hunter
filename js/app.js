@@ -1,6 +1,7 @@
 const app = {
   currentUser: null,
   activePrep: 'questions',
+  backupReminded: false,
 
   async enter(user) {
     if (!isConfigured()) return;
@@ -17,6 +18,12 @@ const app = {
       reminders.notifyDaily(kanban.apps);
       app.renderStatsView(kanban.apps);
       app.renderPrep();
+      if (auth.needsNewPassword) auth.promptNewPassword();
+      if (!app.backupReminded && kanban.apps.length &&
+          Date.now() - (+localStorage.getItem('ojt-last-export') || 0) > 14 * 864e5) {
+        app.backupReminded = true;
+        toast('No recent backup — Export (sidebar) saves a JSON copy');
+      }
     } catch (err) { toast(err.message, 'err'); }
   },
 
@@ -207,10 +214,12 @@ const app = {
     a.download = `ojt-hunter-backup-${new Date().toISOString().slice(0,10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    localStorage.setItem('ojt-last-export', String(Date.now()));
     toast(`Backup downloaded — ${kanban.apps.length} applications, ${vault.docs.length} documents, ${notes.length} notes`, 'ok');
   },
 
   async importData(file) {
+    if (!confirm('Import merges rows with matching IDs into your account — existing rows are overwritten, nothing is deleted. Continue?')) return;
     const data = JSON.parse(await file.text());
     if (!Array.isArray(data.applications) || !Array.isArray(data.documents)) {
       throw new Error('Invalid backup format');
@@ -327,7 +336,8 @@ const app = {
         return;
       }
       if (!app.currentUser) return;
-      if (e.target.matches('input, textarea, select')) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (!(e.target instanceof Element) || e.target.matches('input, textarea, select')) return;
       switch (e.key.toLowerCase()) {
         case '/': e.preventDefault(); document.getElementById('board-search').focus(); break;
         case 'n': kanban.openModal(null); break;
@@ -345,8 +355,15 @@ const app = {
     window.addEventListener('error', e => {
       if (e.message) toast('Error: ' + e.message, 'err');
     });
-    window.addEventListener('offline', () => toast('You are offline — changes will fail until reconnect', 'err'));
-    window.addEventListener('online', () => toast('Back online', 'ok'));
+    const offBanner = document.getElementById('off-banner');
+    window.addEventListener('offline', () => {
+      offBanner.classList.remove('hidden');
+      toast('You are offline — changes will fail until reconnect', 'err');
+    });
+    window.addEventListener('online', () => {
+      offBanner.classList.add('hidden');
+      toast('Back online', 'ok');
+    });
 
     if (!isConfigured()) {
       const warn = document.getElementById('setup-warning');
