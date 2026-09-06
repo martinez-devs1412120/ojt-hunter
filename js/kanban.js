@@ -1,9 +1,15 @@
+// Mobile layout condition — keep in sync with the CSS media queries.
+// Touch devices get the mobile board up to 900px (some 720p-class phones
+// report ~690-820px viewports and would otherwise fall in the gap).
+const MOBILE_MQ = '(max-width: 768px), (max-width: 900px) and (pointer: coarse)';
+
 const kanban = {
   apps: [],
   loaded: false,
   editingId: null,
   currentNotes: [],
   mobileStatus: 'to_apply',
+  mq: null,
 
   async load() {
     kanban.apps = await fetchApplications();
@@ -35,7 +41,8 @@ const kanban = {
 
     // Phones get a status tab strip + single-column list (HTML5 drag
     // doesn't exist on touch), desktop keeps the five-column board
-    if (window.matchMedia('(max-width: 640px)').matches) {
+    if (!kanban.mq) kanban.mq = window.matchMedia(MOBILE_MQ);
+    if (kanban.mq.matches) {
       kanban.renderMobile(board, list);
       return;
     }
@@ -268,8 +275,8 @@ const kanban = {
     document.getElementById('board-search').oninput = () => kanban.render();
 
     // Re-render when crossing the mobile/desktop breakpoint
-    window.matchMedia('(max-width: 640px)')
-      .addEventListener('change', () => kanban.render());
+    kanban.mq = window.matchMedia(MOBILE_MQ);
+    kanban.mq.addEventListener?.('change', () => kanban.render());
 
     // Save from anywhere: quick-add by URL + bookmarklet setup
     document.getElementById('btn-capture').onclick = () => {
