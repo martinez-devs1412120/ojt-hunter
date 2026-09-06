@@ -1,4 +1,4 @@
-const CACHE = 'ojt-hunter-v10';
+const CACHE = 'ojt-hunter-v11';
 const ASSETS = [
   './',
   './index.html',

@@ -46,6 +46,23 @@
 </div>
 
 <div id="app" class="shell hidden">
+
+  <!-- Mobile-only top bar; the sidebar becomes the bottom tab bar -->
+  <header class="mobile-top">
+    <span class="mt-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.75"/>
+        <circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/>
+      </svg>
+    </span>
+    <span class="mt-name">OJT Hunter</span>
+    <button id="mt-signout" class="mt-btn" type="button" aria-label="Sign out" title="Sign out">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="M6 2H3.5A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14H6M10.5 11 14 8l-3.5-3M14 8H6"/>
+      </svg>
+    </button>
+  </header>
+
   <aside class="sidebar">
     <div class="side-user">
       <span id="avatar" class="avatar"></span>
@@ -320,6 +337,24 @@
 </dialog>
 
 <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+<!-- Mobile-only floating add button + bottom sheet -->
+<button id="fab" class="fab" type="button" aria-label="Add">
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <path d="M8 3v10M3 8h10"/>
+  </svg>
+</button>
+<dialog id="modal-fab" class="modal narrow fab-sheet">
+  <div class="fab-options">
+    <button class="btn wide" type="button" data-act="app">New application</button>
+    <button class="btn wide" type="button" data-act="url">Paste job URL</button>
+    <button class="btn wide" type="button" data-act="doc">Add document</button>
+  </div>
+  <div class="modal-actions">
+    <span class="spacer"></span>
+    <button class="btn ghost cancel-btn" type="button">Cancel</button>
+  </div>
+</dialog>
 
 <dialog id="modal-capture" class="modal narrow">
   <form id="form-capture" method="dialog">

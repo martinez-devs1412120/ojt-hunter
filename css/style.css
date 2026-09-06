@@ -931,3 +931,84 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   .mmove svg { width: 14px; height: 14px; }
   .mmove:active { background: var(--card-hover); color: var(--text); }
 }
+
+/* ---------- dedicated mobile layout: header + FAB + bottom sheet ---------- */
+
+/* Desktop never sees the mobile chrome */
+.mobile-top, .fab { display: none; }
+
+@media (max-width: 768px), (max-width: 900px) and (pointer: coarse) {
+
+  /* Compact top app bar replaces the greeting header */
+  .mobile-top {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: calc(.5rem + env(safe-area-inset-top)) .9rem .5rem;
+    background: var(--side);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .mt-logo { display: flex; color: var(--yellow); }
+  .mt-logo svg { width: 20px; height: 20px; }
+  .mt-name { font-weight: 800; font-size: .95rem; letter-spacing: .02em; }
+  .mt-btn { margin-left: auto; color: var(--dim); background: none; border: 0; padding: .4rem; }
+  .mt-btn:active { color: var(--text); }
+  .mt-btn svg { width: 18px; height: 18px; }
+
+  /* Strip the desktop chrome — phone users get content only */
+  .view-head { display: none; }
+  #view-board .kpis { display: none; }
+  .chart-panel { display: none; }
+  .toolbar .btn { display: none; }
+  .side-foot { display: none; }
+  .kanban { display: block; overflow: visible; }
+
+  .main { padding: 3.6rem 1rem 8rem; }
+
+  /* Floating add button above the tab bar */
+  .fab {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(4.4rem + env(safe-area-inset-bottom));
+    z-index: 65;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--white);
+    color: #0e1013;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .45);
+  }
+  .fab svg { width: 20px; height: 20px; }
+  .fab:active { transform: scale(.94); }
+
+  /* Bottom action sheet */
+  .modal.fab-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    animation: sheet-up .16s ease-out;
+  }
+  .fab-options { display: flex; flex-direction: column; gap: .5rem; }
+  @keyframes sheet-up {
+    from { transform: translateY(30%); opacity: .6; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+}

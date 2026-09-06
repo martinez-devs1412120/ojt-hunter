@@ -366,6 +366,23 @@ const app = {
       toast('Back online', 'ok');
     });
 
+    // Mobile: FAB action sheet + top-bar sign-out
+    document.getElementById('fab').onclick = () => {
+      document.getElementById('modal-fab').showModal();
+    };
+    document.querySelectorAll('#modal-fab [data-act]').forEach(btn => {
+      btn.onclick = () => {
+        closeAllModals();
+        const act = btn.dataset.act;
+        if (act === 'app') kanban.openModal(null);
+        if (act === 'url') document.getElementById('btn-capture').click();
+        if (act === 'doc') vault.openModal(null);
+      };
+    });
+    document.getElementById('mt-signout').onclick = async () => {
+      await sb().auth.signOut();
+    };
+
     if (!isConfigured()) {
       const warn = document.getElementById('setup-warning');
       warn.innerHTML =
