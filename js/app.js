@@ -295,6 +295,12 @@ const app = {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }
 
+    // Touch devices have no "/" shortcut — drop the hint from the placeholder
+    if ('ontouchstart' in window) {
+      document.getElementById('board-search').placeholder =
+        'Search company or position…';
+    }
+
     document.querySelectorAll('.nav-item[data-view]').forEach(tab => {
       tab.onclick = () => {
         document.querySelectorAll('.nav-item[data-view]').forEach(t => t.classList.remove('active'));
