@@ -3,6 +3,7 @@ const kanban = {
   loaded: false,
   editingId: null,
   currentNotes: [],
+  mobileStatus: 'to_apply',
 
   async load() {
     kanban.apps = await fetchApplications();
@@ -27,6 +28,17 @@ const kanban = {
     const board = document.getElementById('kanban');
     board.innerHTML = '';
     const list = kanban.visible();
+
+    document.getElementById('board-loading').classList.toggle('hidden', kanban.loaded);
+    document.getElementById('board-empty').classList.toggle(
+      'hidden', !(list.length === 0));
+
+    // Phones get a status tab strip + single-column list (HTML5 drag
+    // doesn't exist on touch), desktop keeps the five-column board
+    if (window.matchMedia('(max-width: 640px)').matches) {
+      kanban.renderMobile(board, list);
+      return;
+    }
 
     for (const status of STATUSES) {
       const colApps = list.filter(a => a.status === status);
@@ -64,30 +76,86 @@ const kanban = {
         col.classList.remove('drag-over');
         const id = e.dataTransfer.getData('text/plain');
         const row = kanban.apps.find(a => a.id === id);
-        if (!row || row.status === status) return;
-        const prevStatus = STATUS_LABELS[row.status];
-        const newStatus = STATUS_LABELS[status];
-        try {
-          const fields = { status };
-          const now = new Date().toISOString();
-          if (['applied', 'interview', 'offer'].includes(status) && !row.applied_at) {
-            fields.applied_at = now;
-          }
-          if (status === 'interview' && !row.interviewed_at) fields.interviewed_at = now;
-          if (status === 'offer' && !row.offered_at) fields.offered_at = now;
-          const updated = await updateApplication(id, fields);
-          Object.assign(row, updated);
-          kanban.sync();
-          toast(`"${row.company}" moved ${prevStatus} → ${newStatus}`, 'ok');
-        } catch (err) { toast(err.message, 'err'); }
+        kanban.moveStatus(row, status);
       });
 
       board.appendChild(col);
     }
+  },
 
-    document.getElementById('board-loading').classList.toggle('hidden', kanban.loaded);
-    document.getElementById('board-empty').classList.toggle(
-      'hidden', !(list.length === 0));
+  renderMobile(board, list) {
+    const wrap = document.createElement('div');
+    wrap.className = 'mboard';
+
+    const chips = document.createElement('div');
+    chips.className = 'mchips';
+    for (const status of STATUSES) {
+      const n = list.filter(a => a.status === status).length;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'mchip' + (kanban.mobileStatus === status ? ' active' : '');
+      chip.innerHTML = `<span class="mchip-dot"></span>${STATUS_LABELS[status]} <b>${n}</b>`;
+      chip.querySelector('.mchip-dot').style.background = STATUS_COLORS[status];
+      chip.onclick = () => { kanban.mobileStatus = status; kanban.render(); };
+      chips.appendChild(chip);
+    }
+    wrap.appendChild(chips);
+
+    const listEl = document.createElement('div');
+    listEl.className = 'mlist';
+    const cards = list.filter(a => a.status === kanban.mobileStatus);
+    if (!cards.length) {
+      const empty = document.createElement('div');
+      empty.className = 'col-empty';
+      empty.textContent = 'Nothing here yet';
+      listEl.appendChild(empty);
+    }
+    for (const row of cards) {
+      const card = kanban.card(row);
+      const nav = document.createElement('div');
+      nav.className = 'mcard-nav';
+      const idx = STATUSES.indexOf(row.status);
+      if (idx > 0) nav.appendChild(kanban.moveBtn(row, idx - 1, 'left'));
+      if (idx < STATUSES.length - 1) nav.appendChild(kanban.moveBtn(row, idx + 1, 'right'));
+      card.appendChild(nav);
+      listEl.appendChild(card);
+    }
+    wrap.appendChild(listEl);
+    board.appendChild(wrap);
+  },
+
+  moveBtn(row, targetIdx, dir) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mmove';
+    const label = 'Move to ' + STATUS_LABELS[STATUSES[targetIdx]];
+    b.title = label;
+    b.setAttribute('aria-label', label);
+    b.innerHTML = dir === 'left'
+      ? '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg>'
+      : '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3l5 5-5 5"/></svg>';
+    b.onclick = e => { e.stopPropagation(); kanban.moveStatus(row, STATUSES[targetIdx]); };
+    return b;
+  },
+
+  // Shared by desktop drag-drop and the mobile move buttons
+  async moveStatus(row, status) {
+    if (!row || row.status === status) return;
+    const prevStatus = STATUS_LABELS[row.status];
+    const newStatus = STATUS_LABELS[status];
+    try {
+      const fields = { status };
+      const now = new Date().toISOString();
+      if (['applied', 'interview', 'offer'].includes(status) && !row.applied_at) {
+        fields.applied_at = now;
+      }
+      if (status === 'interview' && !row.interviewed_at) fields.interviewed_at = now;
+      if (status === 'offer' && !row.offered_at) fields.offered_at = now;
+      const updated = await updateApplication(row.id, fields);
+      Object.assign(row, updated);
+      kanban.sync();
+      toast(`"${row.company}" moved ${prevStatus} → ${newStatus}`, 'ok');
+    } catch (err) { toast(err.message, 'err'); }
   },
 
   card(row) {
@@ -198,6 +266,10 @@ const kanban = {
   init() {
     document.getElementById('btn-add-app').onclick = () => kanban.openModal(null);
     document.getElementById('board-search').oninput = () => kanban.render();
+
+    // Re-render when crossing the mobile/desktop breakpoint
+    window.matchMedia('(max-width: 640px)')
+      .addEventListener('change', () => kanban.render());
 
     // Save from anywhere: quick-add by URL + bookmarklet setup
     document.getElementById('btn-capture').onclick = () => {

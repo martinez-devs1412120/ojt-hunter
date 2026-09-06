@@ -869,3 +869,60 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
 
   .modal { padding: 1.2rem 1.1rem; max-height: calc(100dvh - 2rem); }
 }
+
+/* ---------- mobile: fit, scale, and the list-style board ---------- */
+
+@media (max-width: 640px) {
+  .greet { font-size: 1.3rem; }
+  .big-num { font-size: 1.5rem; }
+  .kpi-num { font-size: 1.35rem; }
+  .kpis { gap: .55rem; }
+  .kpi { padding: .65rem .75rem; }
+  .toolbar { gap: .5rem; }
+  .search { flex: 1 1 100%; min-width: 0; }
+
+  /* tall forms scroll inside the dialog instead of painting past its edges */
+  .modal { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  .mboard { display: flex; flex-direction: column; gap: .65rem; }
+  .mchips {
+    display: flex;
+    gap: .4rem;
+    overflow-x: auto;
+    padding-bottom: .15rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mchip {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .42rem .65rem;
+    border-radius: 99px;
+    border: 1px solid var(--border-soft);
+    background: var(--panel);
+    color: var(--dim);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
+  .mchip b { font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+  .mchip.active { border-color: var(--white); color: var(--text); }
+  .mchip-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+
+  .mlist { display: flex; flex-direction: column; gap: .55rem; }
+  .mcard-nav { display: flex; gap: .45rem; margin-top: .55rem; }
+  .mmove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--dim);
+  }
+  .mmove svg { width: 14px; height: 14px; }
+  .mmove:active { background: var(--card-hover); color: var(--text); }
+}
