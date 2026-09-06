@@ -2,32 +2,18 @@ const reminders = {
   DAY_MS: 86400000,
   notified: new Set(),
 
+  // Pure versions of these live in js/logic.js; these wrap them with "now"
   deadlineState(app) {
-    if (!app.deadline || ['offer', 'rejected'].includes(app.status)) return null;
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const due = new Date(app.deadline + 'T00:00:00');
-    const days = Math.round((due - today) / reminders.DAY_MS);
-    return { days, date: app.deadline };
+    return computeDeadlineState(app, today);
   },
 
   followUpState(app) {
-    if (!app.follow_up_at) return null;
-    const when = new Date(app.follow_up_at);
-    const now = new Date();
-    const days = Math.floor((when - now) / reminders.DAY_MS);
-    return { days, date: when };
+    return computeFollowUpState(app, new Date());
   },
 
   allAlerts(apps) {
-    const out = [];
-    for (const a of apps) {
-      const dl = reminders.deadlineState(a);
-      if (dl && dl.days < 0) out.push({ type: 'overdue', app: a, ...dl });
-      else if (dl && dl.days <= 7) out.push({ type: 'due_soon', app: a, ...dl });
-      const fu = reminders.followUpState(a);
-      if (fu && fu.days <= 1) out.push({ type: 'followup', app: a, ...fu });
-    }
-    return out.sort((x, y) => new Date(x.date) - new Date(y.date));
+    return computeAlerts(apps, startOfToday(), new Date());
   },
 
   render(apps) {
@@ -82,11 +68,8 @@ const reminders = {
       const d = new Date(today); d.setDate(d.getDate() + i);
       days.push(d);
     }
-    // Local date string — toISOString() would shift a day in UTC+ timezones
-    const pad = n => String(n).padStart(2, '0');
-    const localISO = d =>
-      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-    const counts = days.map(d => apps.filter(a => a.deadline === localISO(d)).length);
+    // toISODate is local — toISOString() would shift a day in UTC+ timezones
+    const counts = days.map(d => apps.filter(a => a.deadline === toISODate(d)).length);
     const max = Math.max(1, ...counts);
     const letters = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     days.forEach((d, i) => {

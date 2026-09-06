@@ -24,6 +24,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Run logic tests
+        run: node --test tests/logic.test.js
+
       - name: Inject Supabase config
         run: |
           cat > js/config.js <<'EOF'

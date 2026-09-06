@@ -331,47 +331,7 @@ function toLocalInput(iso) {
 }
 
 // --- Save from anywhere (capture) helpers ---
-
-// "Frontend Dev at Acme | JobStreet" → position + company guesses.
-// Splits at the rightmost separator first (site names trail the title);
-// if an "at Something" segment sits before it, that's the real employer.
-function guessFromTitle(title) {
-  const t = (title || '').replace(/\s+/g, ' ').trim();
-  if (!t) return { position: '', company: '' };
-  const lower = t.toLowerCase();
-  let best = -1, bestSep = '';
-  for (const sep of [' at ', ' – ', ' - ', ' | ']) {
-    const i = lower.lastIndexOf(sep);
-    if (i > best) { best = i; bestSep = sep; }
-  }
-  if (best <= 2 || t.length - best - bestSep.length <= 1) {
-    return { position: t.slice(0, 120), company: '' };
-  }
-  const at = lower.lastIndexOf(' at ');
-  if (at > 0 && at < best && bestSep !== ' at ') {
-    const mid = t.slice(at + 4, best).trim();
-    // Mid segment must look like a name, not "least 200"
-    if (/^[A-Z]/.test(mid) && !/\d/.test(mid)) {
-      return {
-        position: t.slice(0, at).trim().slice(0, 120),
-        company: mid.slice(0, 120)
-      };
-    }
-  }
-  return {
-    position: t.slice(0, best).trim().slice(0, 120),
-    company: t.slice(best + bestSep.length).trim().slice(0, 120)
-  };
-}
-
-function guessCompanyFromUrl(u) {
-  try {
-    const h = new URL(u).hostname.replace(/^www\./, '');
-    const skip = ['jobs', 'careers', 'boards', 'apply', 'job', 'www'];
-    const label = h.split('.').find(l => !skip.includes(l)) || h.split('.')[0];
-    return label ? label.charAt(0).toUpperCase() + label.slice(1) : '';
-  } catch { return ''; }
-}
+// Title/URL guessing lives in js/logic.js; this just builds the bookmarklet.
 
 function buildBookmarklet() {
   const appUrl = location.origin + location.pathname;

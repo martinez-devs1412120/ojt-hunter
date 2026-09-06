@@ -59,3 +59,13 @@ Sign up with any email/password (8+ chars), add your first target company, and s
 ## Stack
 
 Vanilla HTML/CSS/JS · [supabase-js v2](https://supabase.com/docs/reference/javascript) via CDN · zero build tools.
+
+## Development
+
+No dependencies, no build step. The pure logic (URL sanitizing, job-title parsing, date math, stats) lives in [`js/logic.js`](js/logic.js), separate from the DOM/network code. Run the test suite with Node's built-in runner:
+
+```bash
+node --test tests/logic.test.js
+```
+
+GitHub Actions runs the tests before every deploy, so a regression fails the build instead of shipping.

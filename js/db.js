@@ -1,26 +1,5 @@
-const STATUSES = ['to_apply', 'applied', 'interview', 'offer', 'rejected'];
-const STATUS_LABELS = {
-  to_apply: 'To Apply',
-  applied: 'Applied',
-  interview: 'Interview',
-  offer: 'Offer',
-  rejected: 'Rejected'
-};
-const STATUS_COLORS = {
-  to_apply: '#8b98ab',
-  applied: '#4f8cff',
-  interview: '#e2b93d',
-  offer: '#3fb96f',
-  rejected: '#ef5350'
-};
-
-function sanitizeUrl(raw) {
-  if (!raw) return null;
-  try {
-    const u = new URL(raw);
-    return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : null;
-  } catch (e) { return null; }
-}
+// Status metadata and shared pure helpers live in js/logic.js
+// (STATUSES, STATUS_LABELS, STATUS_COLORS, sanitizeUrl, …).
 
 // getSession reads the local session (refreshing if expired) — no extra
 // network round-trip per write, unlike auth.getUser().

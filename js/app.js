@@ -64,48 +64,20 @@ const app = {
   },
 
   renderStatsView(apps) {
-    const applied = apps.filter(a => a.applied_at || a.status !== 'to_apply').length;
-    const interviewed = apps.filter(a =>
-      a.interviewed_at || ['interview', 'offer'].includes(a.status)).length;
-    const offered = apps.filter(a => a.offered_at || a.status === 'offer').length;
-
-    const rateAI = applied ? Math.round((interviewed / applied) * 100) : 0;
-    const rateIO = interviewed ? Math.round((offered / interviewed) * 100) : 0;
-    setNum('stat-rate-ai', rateAI + '%');
-    setNum('stat-rate-io', rateIO + '%');
-
-    // Exact once the interviewed_at/offered_at columns exist (sql/schema.sql);
-    // rows from before that fall back to updated_at as the stage date.
-    const stageDate = (a, col, activeStatuses) =>
-      a[col] ? new Date(a[col])
-        : (activeStatuses.includes(a.status) && a.updated_at ? new Date(a.updated_at) : null);
-
-    let sumDI = 0, cntDI = 0;
-    for (const a of apps) {
-      const from = a.applied_at ? new Date(a.applied_at) : null;
-      const to = stageDate(a, 'interviewed_at', ['interview', 'offer']);
-      if (from && to && to >= from) { sumDI += (to - from) / 864e5; cntDI++; }
-    }
-    setNum('stat-avg-di', cntDI ? Math.round(sumDI / cntDI) + 'd' : '—');
-
-    let sumDO = 0, cntDO = 0;
-    for (const a of apps) {
-      const from = stageDate(a, 'interviewed_at', ['interview', 'offer']);
-      const to = stageDate(a, 'offered_at', ['offer']);
-      if (from && to && to >= from) { sumDO += (to - from) / 864e5; cntDO++; }
-    }
-    setNum('stat-avg-do', cntDO ? Math.round(sumDO / cntDO) + 'd' : '—');
-
+    const s = computeStats(apps);
+    setNum('stat-rate-ai', s.rateAI + '%');
+    setNum('stat-rate-io', s.rateIO + '%');
+    setNum('stat-avg-di', s.avgDaysToInterview === null ? '—' : s.avgDaysToInterview + 'd');
+    setNum('stat-avg-do', s.avgDaysToOffer === null ? '—' : s.avgDaysToOffer + 'd');
     app.renderFunnel(apps);
     app.renderSources(apps);
   },
 
   renderFunnel(apps) {
+    const counts = computeFunnelCounts(apps);
     const stages = STATUSES.map(key => ({
       key, label: STATUS_LABELS[key], color: STATUS_COLORS[key]
     }));
-    const counts = {};
-    for (const s of stages) counts[s.key] = apps.filter(a => a.status === s.key).length;
     const max = Math.max(1, ...Object.values(counts));
 
     const el = document.getElementById('funnel-steps');
