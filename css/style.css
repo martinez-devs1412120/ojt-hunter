@@ -1,25 +1,30 @@
 :root {
-  --bg: #101214;
-  --side: #0a0b0d;
-  --panel: #15171a;
-  --card: #1a1d21;
-  --card-hover: #20242a;
-  --border: #23262c;
-  --border-soft: #1c1f23;
-  --text: #e9ebee;
-  --dim: #9aa0a9;
-  --faint: #575d66;
-  --white: #f2f3f5;
-  --red: #cf7d7d;
-  --red-soft: rgba(207, 125, 125, .12);
-  --yellow: #d4bc80;
-  --yellow-soft: rgba(212, 188, 128, .12);
-  --green: #8fbf9f;
-  --green-soft: rgba(143, 191, 159, .12);
+  --bg: #0e1014;
+  --side: #0a0c10;
+  --panel: #16191e;
+  --card: #1c2026;
+  --card-hover: #232830;
+  --border: #2a2f37;
+  --border-soft: #20242a;
+  --text: #f1f3f5;
+  --dim: #b5bac2;
+  --faint: #6f757e;
+  --white: #f6f7f9;
+  --red: #e08888;
+  --red-soft: rgba(224, 136, 136, .14);
+  --yellow: #e2c585;
+  --yellow-soft: rgba(226, 197, 133, .16);
+  --green: #95c7a4;
+  --green-soft: rgba(149, 199, 164, .16);
+  --blue: #82aeec;
+  --blue-soft: rgba(130, 174, 236, .16);
   --radius: 10px;
   --radius-sm: 7px;
   --shadow: 0 14px 40px rgba(0, 0, 0, .55);
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * { box-sizing: border-box; }
@@ -35,7 +40,7 @@ body {
 .hidden { display: none !important; }
 .spacer { flex: 1; }
 
-h1, h2, h3 { margin: 0; font-weight: 650; }
+h1, h2, h3 { margin: 0; font-weight: 650; line-height: 1.25; letter-spacing: -.01em; }
 h2 { font-size: 1.05rem; }
 
 .eyebrow {
@@ -74,15 +79,27 @@ input, select, textarea { font: inherit; color: var(--text); }
 .btn.wide { width: 100%; }
 
 .input, .field input, .field select, .field textarea {
-  background: var(--panel);
+  background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: .5rem .7rem;
+  padding: .55rem .8rem;
+  color: var(--text);
+  font: inherit;
+  font-size: .92rem;
+  width: 100%;
+  min-height: 38px;
+  transition: border-color .12s, background .12s, box-shadow .12s;
+}
+.field input::placeholder, .field textarea::placeholder { color: var(--faint); }
+.input:hover, .field input:hover, .field select:hover, .field textarea:hover {
+  border-color: #353a44;
 }
 .input:focus-visible, .field input:focus-visible,
 .field select:focus-visible, .field textarea:focus-visible {
-  outline: none;
-  border-color: var(--dim);
+  outline: 0;
+  border-color: var(--blue);
+  background: var(--panel);
+  box-shadow: 0 0 0 3px rgba(130, 174, 236, .18);
 }
 .search { min-width: 240px; flex: 0 1 300px; }
 
@@ -379,9 +396,9 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   position: relative;
   background: var(--card);
   border: 1px solid var(--border-soft);
-  border-left-width: 2px;
+  border-left-width: 3px;
   border-radius: var(--radius-sm);
-  padding: .6rem .7rem .6rem .8rem;
+  padding: .75rem .85rem .7rem .95rem;
   cursor: grab;
   transition: transform .1s, border-color .15s, background .15s;
 }
@@ -390,19 +407,20 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
 .card.pr-high { border-left-color: var(--red); }
 .card.pr-medium { border-left-color: var(--yellow); }
 .card.pr-low { border-left-color: var(--green); }
-.card-company { font-weight: 700; font-size: .92rem; }
-.card-position { color: var(--dim); font-size: .8rem; margin-top: .12rem; }
-.card-meta { display: flex; flex-wrap: wrap; gap: .32rem; margin-top: .55rem; }
+.card-company { font-weight: 700; font-size: .98rem; letter-spacing: -.005em; }
+.card-position { color: var(--dim); font-size: .85rem; margin-top: .15rem; }
+.card-meta { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .6rem; }
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: .25rem;
+  gap: .3rem;
   border-radius: 5px;
-  padding: .12rem .42rem;
-  font-size: .7rem;
+  padding: .18rem .5rem;
+  font-size: .72rem;
   font-weight: 600;
-  background: rgba(255, 255, 255, .05);
+  background: rgba(255, 255, 255, .06);
   color: var(--dim);
+  border: 1px solid transparent;
 }
 .pill.due-soon { background: var(--yellow-soft); color: var(--yellow); }
 .pill.overdue { background: var(--red-soft); color: var(--red); }
