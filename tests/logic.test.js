@@ -69,10 +69,14 @@ test('computeDeadlineState rules', () => {
 });
 
 test('computeFollowUpState counts days until the reminder', () => {
-  const now = new Date(2026, 8, 5, 12);
-  assert.deepEqual(
-    L.computeFollowUpState({ follow_up_at: '2026-09-06T09:00:00Z' }, now),
-    { days: 1, date: new Date('2026-09-06T09:00:00Z') });
+  // Use a "now" of local midnight on day D so the follow-up at 09:00 UTC
+  // of D+1 lands exactly 1 day away regardless of the test machine's
+  // wall-clock time (Math.floor of a fractional day would otherwise
+  // collapse to 0).
+  const now = new Date(2026, 8, 5);
+  const fu = L.computeFollowUpState({ follow_up_at: '2026-09-06T00:00:00Z' }, now);
+  assert.equal(fu.days, 1);
+  assert.equal(fu.date.toISOString(), '2026-09-06T00:00:00.000Z');
   assert.equal(L.computeFollowUpState({ status: 'applied' }, now), null);
 });
 
