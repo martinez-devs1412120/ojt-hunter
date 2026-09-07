@@ -58,7 +58,10 @@ const vault = {
 
       card.querySelector('.act-copy').onclick = async () => {
         try {
-          const url = d.storage_path ? await createSignedUrl(d.storage_path) : d.link;
+          // Copy = attachment URL so HR's email recipient gets a real download
+          const url = d.storage_path
+            ? await createSignedUrl(d.storage_path, 3600, 'attachment')
+            : d.link;
           await navigator.clipboard.writeText(url);
           toast(d.storage_path ? 'Private link copied — expires in 1 hour' : 'Link copied — paste it into your email!', 'ok');
         } catch { toast('Copy failed', 'err'); }
@@ -67,7 +70,10 @@ const vault = {
       if (openBtn) {
         openBtn.onclick = async () => {
           try {
-            const url = d.storage_path ? await createSignedUrl(d.storage_path) : safeLink;
+            // Open = inline URL so the browser previews PDFs/images in-place
+            const url = d.storage_path
+              ? await createSignedUrl(d.storage_path, 3600, 'inline')
+              : safeLink;
             window.open(url, '_blank', 'noopener,noreferrer');
           } catch (err) { toast(err.message, 'err'); }
         };

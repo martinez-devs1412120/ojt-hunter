@@ -81,9 +81,14 @@ async function uploadVaultFile(file) {
   const uid = await currentUserId();
   const safeName = file.name.replace(/[^A-Za-z0-9._-]+/g, '_').slice(-120);
   const path = `${uid}/${Date.now()}-${safeName}`;
+  // content-disposition: inline → browser previews PDFs/images instead of
+  // downloading. The bucket MIME whitelist + our validateVaultFile both
+  // still gate the file type.
   const { error } = await sb().storage.from(VAULT_BUCKET).upload(path, file, {
     cacheControl: '3600',
-    upsert: false
+    upsert: false,
+    contentType: file.type || undefined,
+    metadata: { original_name: safeName }
   });
   if (error) throw error;
   return path;
@@ -95,10 +100,12 @@ async function deleteStorageObject(path) {
   if (error) throw error;
 }
 
-// Short-lived signed URL — private by default, links self-expire
-async function createSignedUrl(path, expiresInSeconds = 3600) {
+// Short-lived signed URL. defaults to 'inline' (browser previews the
+// file in-place); 'attachment' (forces download) is used when copying
+// a link to paste into an email.
+async function createSignedUrl(path, expiresInSeconds = 3600, disposition = 'inline') {
   const { data, error } = await sb().storage.from(VAULT_BUCKET)
-    .createSignedUrl(path, expiresInSeconds);
+    .createSignedUrl(path, expiresInSeconds, { download: disposition === 'attachment' });
   if (error) throw error;
   return data.signedUrl;
 }
