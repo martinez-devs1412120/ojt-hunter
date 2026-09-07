@@ -282,7 +282,7 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
 }
 .side-foot { margin-top: auto; padding-top: .8rem; border-top: 1px solid var(--border-soft); }
 
-.main { overflow: hidden; padding: 1.6rem 2rem 1.2rem; }
+.main { overflow: auto; padding: 1.6rem 2rem 1.2rem; }
 .view { display: none; height: 100%; }
 .view.active { display: block; }
 
@@ -331,11 +331,13 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
 
 .kanban {
   display: grid;
-  grid-template-columns: repeat(5, minmax(235px, 1fr));
+  /* auto-fit collapses columns based on available width: each card is
+     at least 240px; if the row doesn't fit 5, it wraps to fewer cols.
+     min(100%, 1400px) prevents stretching on huge displays. */
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: .7rem;
   height: calc(100% - 232px);
   min-height: 220px;
-  overflow-x: auto;
   align-items: start;
 }
 .col {
@@ -737,7 +739,7 @@ textarea:focus-visible { outline: none; border-color: var(--dim); }
   .side-user { justify-content: center; padding-bottom: 1.4rem; }
   .badge { position: absolute; top: 2px; right: 6px; margin: 0; }
   .main { padding: 1.1rem; }
-  .kanban { grid-template-columns: repeat(5, 250px); height: auto; }
+  .kanban { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); height: auto; }
   .kpis { grid-template-columns: repeat(2, 1fr); }
   .cov-grid { grid-template-columns: 1fr; }
   .grid-2 { grid-template-columns: 1fr; }
