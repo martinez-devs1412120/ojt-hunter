@@ -68,7 +68,7 @@ const vault = {
         openBtn.onclick = async () => {
           try {
             const url = d.storage_path ? await createSignedUrl(d.storage_path) : safeLink;
-            window.open(url, '_blank', 'noopener');
+            window.open(url, '_blank', 'noopener,noreferrer');
           } catch (err) { toast(err.message, 'err'); }
         };
       }

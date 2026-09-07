@@ -49,12 +49,29 @@ const VAULT_BUCKET = 'vault-files';
 const VAULT_MAX_BYTES = 10 * 1024 * 1024;
 const VAULT_ALLOWED_EXT = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'doc', 'docx'];
 
+// Whitelist of (ext -> [allowed browser-reported MIME types]) — defense
+// in depth on top of the bucket's server-side allowed_mime_types list.
+const VAULT_MIME = {
+  pdf:  ['application/pdf'],
+  png:  ['image/png'],
+  jpg:  ['image/jpeg'], jpeg: ['image/jpeg'],
+  webp: ['image/webp'],
+  doc:  ['application/msword'],
+  docx: ['application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+};
+
 function validateVaultFile(file) {
   const ext = (file.name.split('.').pop() || '').toLowerCase();
   if (!VAULT_ALLOWED_EXT.includes(ext)) {
     return 'Allowed file types: ' + VAULT_ALLOWED_EXT.join(', ');
   }
   if (file.size > VAULT_MAX_BYTES) return 'File is too large — 10 MB max';
+  // file.type is empty in some browsers; treat as "unknown" and let the
+  // server-side bucket MIME check reject it if it's truly wrong.
+  const allowedMimes = VAULT_MIME[ext];
+  if (file.type && allowedMimes && !allowedMimes.includes(file.type)) {
+    return 'File extension does not match its content type';
+  }
   return null;
 }
 

@@ -135,3 +135,38 @@ test('startOfToday clears the clock', () => {
   const d = L.startOfToday();
   assert.equal(d.getHours() + d.getMinutes() + d.getSeconds() + d.getMilliseconds(), 0);
 });
+
+// ---- Defense-in-depth for the vault upload (db.js) ----
+// db.js isn't runnable in a plain VM, so we re-derive a focused check
+// for the MIME rule here. (The real validateVaultFile lives in db.js.)
+const ALLOWED = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'doc', 'docx'];
+
+test('vault upload: rename trick is rejected by MIME check', () => {
+  // A .pdf whose content type reports text/html must be refused even
+  // though the extension passes
+  const fake = { name: 'resume.pdf', type: 'text/html', size: 1024 };
+  const ext = fake.name.split('.').pop();
+  const mimes = { pdf: ['application/pdf'] };
+  const valid = ALLOWED.includes(ext) && fake.size <= 10 * 1024 * 1024
+    && (!fake.type || (mimes[ext] && mimes[ext].includes(fake.type)));
+  assert.equal(valid, false, 'rename .pdf from text/html should fail');
+});
+
+test('vault upload: legitimate PDF is allowed', () => {
+  const fake = { name: 'resume.pdf', type: 'application/pdf', size: 1024 };
+  const mimes = { pdf: ['application/pdf'] };
+  const ext = fake.name.split('.').pop();
+  const valid = ALLOWED.includes(ext) && fake.size <= 10 * 1024 * 1024
+    && (!fake.type || (mimes[ext] && mimes[ext].includes(fake.type)));
+  assert.equal(valid, true);
+});
+
+test('vault upload: unknown MIME is allowed through (server catches it)', () => {
+  // file.type is empty on some browsers; we defer to server check
+  const fake = { name: 'photo.jpg', type: '', size: 1024 };
+  const mimes = { jpg: ['image/jpeg'] };
+  const ext = fake.name.split('.').pop();
+  const valid = ALLOWED.includes(ext) && fake.size <= 10 * 1024 * 1024
+    && (!fake.type || (mimes[ext] && mimes[ext].includes(fake.type)));
+  assert.equal(valid, true, 'empty MIME defers to server-side check');
+});

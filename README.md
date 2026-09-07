@@ -47,6 +47,7 @@ Sign up with any email/password (8+ chars), add your first target company, and s
 - **DB-level limits** — length/range constraints on every text and numeric column, plus URL-scheme (`https?://` only) and email-format checks, enforced by Postgres even if the client is bypassed
 - **Account recovery** — "Forgot password?" sends a Supabase reset email; the recovery link returns to the app and prompts you to set a new password. One-time setup: add your deployed URL (e.g. `https://you.github.io/ojt-hunter/`) under Supabase → Authentication → URL Configuration → Redirect URLs
 - **No referrer leakage** — `referrer: no-referrer` meta plus `rel="noopener noreferrer"` on outbound links
+- **CSP via meta tag** — `default-src 'none'`, scripts only from self + jsDelivr (pinned by SRI), `connect-src` derived from your Supabase host, `base-uri/object-src/frame-src/form-action 'none'`. **Accepted risk:** `frame-ancestors` can't be set via a meta tag and GitHub Pages doesn't expose `X-Frame-Options`, so clickjacking via iframe is theoretically possible — mitigated by no destructive one-click actions, and a JS frame-buster would be a defense-in-depth addition if hosting changes
 
 ## Data model
 
