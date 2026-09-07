@@ -70,10 +70,20 @@ const vault = {
       if (openBtn) {
         openBtn.onclick = async () => {
           try {
-            // Open = inline URL so the browser previews PDFs/images in-place
-            const url = d.storage_path
-              ? await createSignedUrl(d.storage_path, 3600, 'inline')
-              : safeLink;
+            let url;
+            if (d.storage_path) {
+              // Supabase signs ?download=1 into the URL even when
+              // createSignedUrl is called with download:false; that
+              // makes the browser force-download. Strip the param
+              // (it isn't part of the signature payload) so the URL
+              // serves with content-disposition: inline instead.
+              const signed = await createSignedUrl(d.storage_path, 3600, 'inline');
+              const u = new URL(signed);
+              u.searchParams.delete('download');
+              url = u.toString();
+            } else {
+              url = safeLink;
+            }
             window.open(url, '_blank', 'noopener,noreferrer');
           } catch (err) { toast(err.message, 'err'); }
         };
