@@ -174,3 +174,30 @@ test('vault upload: unknown MIME is allowed through (server catches it)', () => 
     && (!fake.type || (mimes[ext] && mimes[ext].includes(fake.type)));
   assert.equal(valid, true, 'empty MIME defers to server-side check');
 });
+
+// ---- Signed-URL preview fix (vault.js) ----
+// Supabase signs ?download=1 into the URL even when createSignedUrl is
+// called with download:false. The Open button strips it via URL.searchParams
+// so the browser previews the file inline; the Copy button keeps it so
+// recipients get a real file download.
+function stripDownloadParam(url) {
+  try { const u = new URL(url); u.searchParams.delete('download'); return u.toString(); }
+  catch { return url; }
+}
+
+test('signed URL: trailing ?download=1 is stripped for inline preview', () => {
+  const inUrl = 'https://x.supabase.co/storage/v1/object/sign/vault-files/abc?token=eyJ.eyJ.123&download=1';
+  assert.equal(stripDownloadParam(inUrl),
+    'https://x.supabase.co/storage/v1/object/sign/vault-files/abc?token=eyJ.eyJ.123');
+});
+
+test('signed URL: leading ?download=1 is stripped without breaking the ?', () => {
+  const inUrl = 'https://x.supabase.co/storage/v1/object/sign/vault-files/abc?download=1&token=eyJ.eyJ.123';
+  assert.equal(stripDownloadParam(inUrl),
+    'https://x.supabase.co/storage/v1/object/sign/vault-files/abc?token=eyJ.eyJ.123');
+});
+
+test('signed URL: missing ?download is a no-op', () => {
+  const inUrl = 'https://x.supabase.co/storage/v1/object/sign/vault-files/abc?token=eyJ.eyJ.123';
+  assert.equal(stripDownloadParam(inUrl), inUrl);
+});
