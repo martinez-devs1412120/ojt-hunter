@@ -31,6 +31,7 @@ const app = {
       reminders.notifyDaily(kanban.apps);
       app.renderStatsView(kanban.apps);
       app.renderPrep();
+      realtime.init();
       if (auth.needsNewPassword) auth.promptNewPassword();
       if (pendingCapture) {
         kanban.openModal(null, pendingCapture);

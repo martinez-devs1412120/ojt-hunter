@@ -158,6 +158,7 @@ const kanban = {
       }
       if (status === 'interview' && !row.interviewed_at) fields.interviewed_at = now;
       if (status === 'offer' && !row.offered_at) fields.offered_at = now;
+      realtime.recordMove(row.id, row.status, status);
       const updated = await updateApplication(row.id, fields);
       Object.assign(row, updated);
       kanban.sync();
