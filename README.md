@@ -1,4 +1,4 @@
-# OJT Hunter 🎯
+# OJT Hunter
 
 **Land that OJT.** A personal dashboard for managing your entire internship application pipeline in the Philippines — Kanban board, document vault, deadline reminders, and company notes. Built with Supabase cloud sync so your data follows you across devices.
 
